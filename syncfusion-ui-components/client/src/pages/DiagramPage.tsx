@@ -1,11 +1,3 @@
-import "@syncfusion/ej2-tailwind3-theme/styles/diagram/index.css";
-import "@syncfusion/ej2-tailwind3-theme/styles/button/index.css";
-import "@syncfusion/ej2-tailwind3-theme/styles/drop-down-list/index.css";
-import "@syncfusion/ej2-tailwind3-theme/styles/auto-complete/index.css";
-import "@syncfusion/ej2-tailwind3-theme/styles/toolbar/index.css";
-import "@syncfusion/ej2-tailwind3-theme/styles/drop-down-button/index.css";
-import "@syncfusion/ej2-icons/styles/tailwind3.css";
-
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { DataManager } from "@syncfusion/ej2-data";
 import {
@@ -421,6 +413,29 @@ const exportItems = [
   { text: "Export as SVG", id: "SVG", iconCss: "e-icons e-file-new" },
 ];
 const fields = { text: "text", value: "value" };
+const connectorPropertiesFor = (layoutType: LayoutType) => ({
+  type:
+    layoutType === "MindMap"
+      ? "Bezier"
+      : layoutType === "RadialTree"
+        ? "Straight"
+        : "Orthogonal",
+  cornerRadius:
+    layoutType === "OrganizationalChart" || layoutType === "HierarchicalTree"
+      ? 10
+      : 0,
+  style: {
+    strokeColor: layoutType === "MindMap" ? "#667EB8" : "#8291AD",
+    strokeWidth: layoutType === "MindMap" ? 2 : 1.7,
+  },
+  sourceDecorator: { shape: "None" },
+  targetDecorator: {
+    shape: ["MindMap", "RadialTree"].includes(layoutType) ? "None" : "Arrow",
+    width: 8,
+    height: 8,
+    style: { fill: "#8291AD", strokeColor: "#8291AD" },
+  },
+});
 
 export default function DiagramPage() {
   const diagramRef = useRef<any>(null),
@@ -503,7 +518,7 @@ export default function DiagramPage() {
       root: "engineering",
       orientation: mindOrientation,
       horizontalSpacing: 44,
-      verticalSpacing: 44,
+      verticalSpacing: mindOrientation === "Vertical" ? 56 : 44,
       getBranch: (node: any) => {
         const data = node?.data;
 
@@ -665,31 +680,7 @@ export default function DiagramPage() {
   );
   const connectorDefaults = useCallback(
     (c: any) => {
-      c.type =
-        layoutType === "MindMap"
-          ? "Bezier"
-          : layoutType === "RadialTree"
-            ? "Straight"
-            : "Orthogonal";
-
-      c.cornerRadius =
-        layoutType === "OrganizationalChart" ||
-        layoutType === "HierarchicalTree"
-          ? 10
-          : 0;
-      c.style = {
-        strokeColor: layoutType === "MindMap" ? "#667EB8" : "#8291AD",
-        strokeWidth: layoutType === "MindMap" ? 2 : 1.7,
-      };
-      c.sourceDecorator = { shape: "None" };
-      c.targetDecorator = {
-        shape: ["MindMap", "RadialTree"].includes(layoutType)
-          ? "None"
-          : "Arrow",
-        width: 8,
-        height: 8,
-        style: { fill: "#8291AD", strokeColor: "#8291AD" },
-      };
+      Object.assign(c, connectorPropertiesFor(layoutType));
       return c;
     },
     [layoutType],
@@ -796,15 +787,34 @@ export default function DiagramPage() {
       return;
     }
 
-    /*
-     * Unmount Overview first. This prevents Overview from reading
-     * the Diagram while the layout-specific Diagram is recreated.
-     */
-    setDiagramReady(false);
+    setLayoutType(nextLayout);
+    window.requestAnimationFrame(() => {
+      const diagram = diagramRef.current;
 
-    window.setTimeout(() => {
-      setLayoutType(nextLayout);
-    }, 0);
+      if (!diagram) {
+        return;
+      }
+
+      diagram.connectors.forEach((connector: any) => {
+        const oldProperties = {
+          type: connector.type,
+          cornerRadius: connector.cornerRadius,
+          style: connector.style,
+          sourceDecorator: connector.sourceDecorator,
+          targetDecorator: connector.targetDecorator,
+        };
+        const nextProperties = connectorPropertiesFor(nextLayout);
+
+        Object.assign(connector, nextProperties);
+        diagram.connectorPropertyChange(
+          connector,
+          oldProperties,
+          nextProperties,
+        );
+      });
+
+      fit();
+    });
   };
 
   const tabs = () => (
@@ -947,7 +957,6 @@ export default function DiagramPage() {
           <section className="diagram-workspace">
             <div className="diagram-canvas">
               <DiagramComponent
-                key={layoutType}
                 id={diagramId}
                 ref={diagramRef}
                 width="100%"
@@ -983,7 +992,7 @@ export default function DiagramPage() {
                     );
                 }}
                 dataLoaded={() => {
-                  window.setTimeout(() => {
+                  window.requestAnimationFrame(() => {
                     const diagram = diagramRef.current;
 
                     if (!diagram) {
@@ -991,12 +1000,9 @@ export default function DiagramPage() {
                     }
 
                     diagram.doLayout();
-
-                    window.setTimeout(() => {
-                      fit();
-                      setDiagramReady(true);
-                    }, 220);
-                  }, 100);
+                    fit();
+                    setDiagramReady(true);
+                  });
                 }}
               >
                 <Inject
@@ -1074,7 +1080,10 @@ export default function DiagramPage() {
                     <h2>Organizational layout</h2>
                     <div className="property-field">
                       <label>Orientation</label>
-                      {ddl(orientationOptions, orientation, setOrientation)}
+                      {ddl(orientationOptions, orientation, (value) => {
+                        setOrientation(value as Orientation);
+                        window.requestAnimationFrame(fit);
+                      })}
                     </div>
                     <div className="property-field">
                       <label>Subtree alignment</label>
@@ -1116,7 +1125,10 @@ export default function DiagramPage() {
                     <h2>Mind-map layout</h2>
                     <div className="property-field">
                       <label>Orientation</label>
-                      {ddl(mindMapOptions, mindOrientation, setMindOrientation)}
+                      {ddl(mindMapOptions, mindOrientation, (value) => {
+                        setMindOrientation(value as MindMapOrientation);
+                        window.requestAnimationFrame(fit);
+                      })}
                     </div>
                     <ButtonComponent
                       cssClass="apply-layout-button"
