@@ -43,7 +43,6 @@ type Orientation =
   | "BottomToTop"
   | "LeftToRight"
   | "RightToLeft";
-type Alignment = "Left" | "Center" | "Right" | "Top" | "Bottom";
 type MindMapOrientation = "Horizontal" | "Vertical";
 type NodeCategory = "Executive" | "Division" | "Team" | "Capability";
 
@@ -347,18 +346,6 @@ const orientationOptions: SelectOption[] = [
   { text: "Left to right", value: "LeftToRight" },
   { text: "Right to left", value: "RightToLeft" },
 ];
-const horizontalOptions: SelectOption[] = ["Left", "Center", "Right"].map(
-  (value) => ({
-    text: value,
-    value,
-  }),
-);
-const verticalOptions: SelectOption[] = ["Top", "Center", "Bottom"].map(
-  (value) => ({
-    text: value,
-    value,
-  }),
-);
 const subtreeOptions: SubtreeOption[] = [
   {
     text: "Vertical alternate",
@@ -455,8 +442,6 @@ export default function DiagramPage() {
   );
   const [tool, setTool] = useState<InteractionMode>("Select");
   const [orientation, setOrientation] = useState<Orientation>("TopToBottom");
-  const [horizontal, setHorizontal] = useState<Alignment>("Center");
-  const [vertical, setVertical] = useState<Alignment>("Center");
   const [subtree, setSubtree] = useState("VerticalLeft");
   const [mindOrientation, setMindOrientation] =
     useState<MindMapOrientation>("Horizontal");
@@ -500,8 +485,8 @@ export default function DiagramPage() {
         ...common,
         type: layoutType,
         orientation,
-        horizontalAlignment: horizontal,
-        verticalAlignment: vertical,
+        horizontalAlignment: "Center",
+        verticalAlignment: "Center",
         bounds: new Rect(30, 30, 1350, 720),
       };
     if (layoutType === "RadialTree")
@@ -517,8 +502,8 @@ export default function DiagramPage() {
       type: "MindMap",
       root: "engineering",
       orientation: mindOrientation,
-      horizontalSpacing: 44,
-      verticalSpacing: mindOrientation === "Vertical" ? 56 : 44,
+      horizontalSpacing: 56,
+      verticalSpacing: 56,
       getBranch: (node: any) => {
         const data = node?.data;
 
@@ -537,7 +522,7 @@ export default function DiagramPage() {
         return current?.branch === "Left" ? "Left" : "Right";
       },
     };
-  }, [layoutType, orientation, horizontal, vertical, orgInfo, mindOrientation]);
+  }, [layoutType, orientation, orgInfo, mindOrientation]);
 
   const fit = useCallback(
     () =>
@@ -1103,14 +1088,6 @@ export default function DiagramPage() {
                     <div className="property-field">
                       <label>Orientation</label>
                       {ddl(orientationOptions, orientation, setOrientation)}
-                    </div>
-                    <div className="property-field">
-                      <label>Horizontal alignment</label>
-                      {ddl(horizontalOptions, horizontal, setHorizontal)}
-                    </div>
-                    <div className="property-field">
-                      <label>Vertical alignment</label>
-                      {ddl(verticalOptions, vertical, setVertical)}
                     </div>
                     <ButtonComponent
                       cssClass="apply-layout-button"
