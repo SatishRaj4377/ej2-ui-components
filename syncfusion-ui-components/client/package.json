@@ -14,6 +14,7 @@
     "@syncfusion/ej2-react-buttons": "^35.2.12",
     "@syncfusion/ej2-react-charts": "^35.2.12",
     "@syncfusion/ej2-react-diagrams": "^35.2.12",
+    "@syncfusion/ej2-react-dropdowns": "^35.2.12",
     "@syncfusion/ej2-react-gantt": "^35.2.12",
     "@syncfusion/ej2-react-grids": "^35.2.12",
     "@syncfusion/ej2-react-inputs": "^35.2.12",

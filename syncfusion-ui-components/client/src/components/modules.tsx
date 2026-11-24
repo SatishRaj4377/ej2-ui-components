@@ -32,6 +32,6 @@ export const MODULES: AppModule[] = [
   { key: 'pivot', path: '/pivot', title: 'Pivot Table', tag: 'Analytics', color: '#7c3aed', description: 'Multi-dimensional analysis of the same SCM data by region, category and period.' },
   { key: 'chart', path: '/chart', title: 'Chart', tag: 'Trends', color: '#0891b2', description: 'Monthly order value and category share across the supply chain.' },
   { key: 'gantt', path: '/gantt', title: 'Gantt', tag: 'Planning', color: '#ea580c', description: 'Warehouse rollout plan with task dependencies and progress.' },
-  { key: 'schedule', path: '/schedule', title: 'Schedule', tag: 'Calendar', color: '#16a34a', description: 'Inbound and outbound shipment calendar for the distribution centres.' },
+  { key: 'schedule', path: '/schedule', title: 'Schedule', tag: 'Live planning', color: '#16a34a', description: 'Delivery plan for the same 1L SCM orders by warehouse. Drag an order to reschedule it.' },
   { key: 'diagram', path: '/diagram', title: 'Diagram', tag: 'Flow', color: '#db2777', description: 'End-to-end supply chain flow from supplier to customer.' },
 ];

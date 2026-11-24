@@ -141,6 +141,51 @@ h1, h2 { margin: 0; }
 .chart-card { padding: 12px; }
 .chart-card.wide { grid-column: 1 / -1; }
 
+/* ---------- Schedule: delivery planning ---------- */
+.plan-actions { display: flex; gap: 8px; }
+.plan-actions .btn-secondary:disabled { opacity: .55; cursor: default; border-color: var(--border); color: var(--muted); }
+.plan-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+.plan-filter { display: flex; flex-direction: column; gap: 4px; }
+.plan-filter label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.plan-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: #334155; margin-left: auto; padding-bottom: 6px; cursor: pointer; }
+.plan-stats .spinner.small { width: 16px; height: 16px; border-width: 2px; }
+.plan-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: #334155; padding: 0 4px; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.legend-dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.legend-lock { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 0 6px; }
+.legend-swatch { width: 18px; height: 11px; border-radius: 3px; background: #94a3b8; display: inline-block; }
+.legend-swatch.critical { box-shadow: inset 4px 0 0 #450a0a; }
+.legend-swatch.rescheduled { background: #e2e8f0; outline: 2px dashed #0f172a; outline-offset: -2px; }
+.plan-notice { position: fixed; right: 24px; bottom: 24px; z-index: 2000; max-width: 460px; border-radius: 10px; padding: 10px 14px; font-size: 14px; border: 1px solid; box-shadow: 0 10px 24px #0f172a24; }
+.plan-notice.ok { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+.plan-notice.error { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+.plan-card { padding: 0; }
+
+#scm-planner .e-appointment { border: 0; color: #fff; }
+#scm-planner .e-appointment .e-subject { font-size: 12px; font-weight: 600; }
+#scm-planner .e-timeline-month-view .e-appointment .e-time, #scm-planner .e-timeline-view .e-appointment .e-time { display: none; }
+#scm-planner .e-timeline-month-view .e-appointment .e-appointment-details, #scm-planner .e-timeline-view .e-appointment .e-appointment-details { align-items: center; }
+#scm-planner .e-appointment.plan-critical { box-shadow: inset 4px 0 0 #450a0a; }
+#scm-planner .e-appointment.plan-rescheduled { outline: 2px dashed #0f172a; outline-offset: -2px; }
+#scm-planner .e-appointment.plan-cancelled { opacity: .7; }
+#scm-planner .e-appointment.plan-cancelled .e-subject { text-decoration: line-through; }
+#scm-planner .e-appointment.plan-locked { cursor: default; }
+#scm-planner .e-agenda-view .e-appointment { color: var(--text); background: #fff; }
+#scm-planner .e-work-cells.plan-today, #scm-planner .e-month-cells.plan-today { background-color: #eef2ff; }
+
+.plan-tip { font-size: 12.5px; line-height: 1.45; }
+.e-quick-popup-wrapper .qi-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; color: #fff; padding: 12px 14px; }
+.qi-title { font-weight: 700; font-size: 15px; }
+.qi-sub { font-size: 12.5px; opacity: .9; }
+.qi-close { background: none; border: 0; color: #fff; font-size: 22px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.qi-body { padding: 10px 14px 4px; }
+.qi-grid { display: grid; grid-template-columns: 1fr; gap: 4px; margin: 0; font-size: 13px; }
+.qi-grid > div { display: grid; grid-template-columns: 92px 1fr; gap: 8px; }
+.qi-grid dt { color: var(--muted); }
+.qi-grid dd { margin: 0; font-weight: 500; }
+.qi-footer { padding: 8px 14px 12px; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.qi-flag { font-size: 11px; font-weight: 700; color: #0f172a; border: 1px dashed #0f172a; border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+
 .not-found { text-align: center; padding: 80px 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .not-found h1 { font-size: 56px; color: var(--primary); }
 
