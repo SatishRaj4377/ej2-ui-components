@@ -10,7 +10,7 @@
   min-height: 620px;
 }
 
-.diagram-page {
+.diagram-showcase-card .diagram-page {
   display: flex;
   width: 100%;
   height: min(780px, calc(100vh - 190px));
@@ -19,37 +19,37 @@
   background: #f4f6fa;
 }
 
-#diagram-toolbar.e-toolbar {
+.diagram-showcase-card #diagram-toolbar.e-toolbar {
   min-height: 54px;
   flex: 0 0 54px;
   padding: 7px 8px;
   border-radius: 10px 10px 0 0;
   background: #fff;
 }
-#diagram-toolbar .e-toolbar-items,
-#diagram-toolbar .e-toolbar-item {
+.diagram-showcase-card #diagram-toolbar .e-toolbar-items,
+.diagram-showcase-card #diagram-toolbar .e-toolbar-item {
   min-height: 38px;
 }
-#diagram-toolbar .e-toolbar-items {
+.diagram-showcase-card #diagram-toolbar .e-toolbar-items {
   background: transparent;
 }
-#diagram-toolbar .e-toolbar-item.e-separator {
+.diagram-showcase-card #diagram-toolbar .e-toolbar-item.e-separator {
   height: 27px;
   margin: 5px 7px;
   border-left-color: #e1e6ee;
 }
-#diagram-toolbar .e-template {
+.diagram-showcase-card #diagram-toolbar .e-template {
   height: 100%;
 }
-.layout-tabs,
-.interaction-tools,
-.output-tools {
+.diagram-showcase-card .layout-tabs,
+.diagram-showcase-card .interaction-tools,
+.diagram-showcase-card .output-tools {
   display: flex;
   height: 100%;
   align-items: center;
   gap: 3px;
 }
-.layout-tab.e-btn {
+.diagram-showcase-card .layout-tab.e-btn {
   height: 36px;
   padding: 0 12px;
   border: 1px solid transparent;
@@ -60,18 +60,18 @@
   font-size: 11px;
   text-transform: none;
 }
-.layout-tab.e-btn.layout-tab-active {
+.diagram-showcase-card .layout-tab.e-btn.layout-tab-active {
   border-color: #9fb4eb;
   color: #294da8;
   background: #eef3ff;
 }
-.command-separator {
+.diagram-showcase-card .command-separator {
   width: 1px;
   height: 24px;
   margin: 0 4px;
   background: #e1e6ee;
 }
-.diagram-icon-button.e-btn {
+.diagram-showcase-card .diagram-icon-button.e-btn {
   display: inline-grid;
   width: 36px;
   min-width: 36px;
@@ -84,13 +84,13 @@
   background: transparent;
   box-shadow: none;
 }
-.diagram-icon-button.e-btn.command-active {
+.diagram-showcase-card .diagram-icon-button.e-btn.command-active {
   border-color: #9eb3e9;
   color: #315bd0;
   background: #eef3ff;
 }
-.diagram-command-button.e-btn,
-.diagram-command-button.e-dropdown-btn {
+.diagram-showcase-card .diagram-command-button.e-btn,
+.diagram-showcase-card .diagram-command-button.e-dropdown-btn {
   height: 36px;
   padding: 0 11px;
   border: 1px solid #d1d9e5;
@@ -101,14 +101,14 @@
   font-size: 11px;
   text-transform: none;
 }
-.diagram-search {
+.diagram-showcase-card .diagram-search {
   position: relative;
   display: flex;
   width: 248px;
   height: 36px;
   align-items: center;
 }
-.search-leading-icon {
+.diagram-showcase-card .search-leading-icon {
   position: absolute;
   left: 11px;
   z-index: 2;
@@ -116,20 +116,20 @@
   font-size: 13px;
   pointer-events: none;
 }
-.diagram-search .e-autocomplete.e-input-group {
+.diagram-showcase-card .diagram-search .e-autocomplete.e-input-group {
   width: 100%;
   height: 36px;
   border-color: #d1d9e5;
   border-radius: 7px;
 }
-.search-result {
+.diagram-search-result {
   display: flex;
   min-height: 48px;
   align-items: center;
   gap: 10px;
   padding: 5px 2px;
 }
-.search-result > span {
+.diagram-search-result > span {
   display: grid;
   width: 30px;
   height: 30px;
@@ -139,18 +139,18 @@
   background: #eef3ff;
   font-weight: 700;
 }
-.search-result div {
+.diagram-search-result div {
   display: grid;
   gap: 2px;
 }
-.search-result strong {
+.diagram-search-result strong {
   font-size: 11px;
 }
-.search-result small {
+.diagram-search-result small {
   color: #8a95a7;
   font-size: 9px;
 }
-.diagram-workspace {
+.diagram-showcase-card .diagram-workspace {
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -160,7 +160,7 @@
   border-radius: 0 0 10px 10px;
   background: #fff;
 }
-.diagram-canvas {
+.diagram-showcase-card .diagram-canvas {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -170,7 +170,7 @@
     linear-gradient(90deg, rgb(113 133 172 / 6%) 1px, transparent 1px);
   background-size: 24px 24px;
 }
-.property-panel {
+.diagram-showcase-card .property-panel {
   position: absolute;
   top: 0;
   right: 0;
@@ -188,12 +188,12 @@
     transform 180ms ease,
     opacity 180ms ease;
 }
-.property-panel-open {
+.diagram-showcase-card .property-panel-open {
   opacity: 1;
   pointer-events: auto;
   transform: translateX(0);
 }
-.property-edge-button.e-btn {
+.diagram-showcase-card .property-edge-button.e-btn {
   position: absolute;
   top: 15px;
   right: 8px;
@@ -211,14 +211,14 @@
   box-shadow: 0 3px 10px rgb(31 51 96 / 13%);
   transition: right 180ms ease;
 }
-.diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
+.diagram-showcase-card .diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
   right: 272px;
 }
-.property-edge-button.e-btn .e-btn-icon {
+.diagram-showcase-card .property-edge-button.e-btn .e-btn-icon {
   margin: 0;
   font-size: 11px;
 }
-.property-header {
+.diagram-showcase-card .property-header {
   display: flex;
   min-height: 58px;
   align-items: center;
@@ -226,7 +226,7 @@
   padding: 0 16px;
   border-bottom: 1px solid #e7ebf1;
 }
-.property-header > .e-icons {
+.diagram-showcase-card .property-header > .e-icons {
   display: grid;
   width: 30px;
   height: 30px;
@@ -235,67 +235,67 @@
   color: #315bd0;
   background: #eef3ff;
 }
-.property-header strong,
-.property-header small {
+.diagram-showcase-card .property-header strong,
+.diagram-showcase-card .property-header small {
   display: block;
 }
-.property-header strong {
+.diagram-showcase-card .property-header strong {
   font-size: 12px;
 }
-.property-header small {
+.diagram-showcase-card .property-header small {
   margin-top: 2px;
   color: #8a95a7;
   font-size: 9px;
 }
-.property-content {
+.diagram-showcase-card .property-content {
   padding: 15px;
 }
-.property-block {
+.diagram-showcase-card .property-block {
   padding-bottom: 16px;
   border-bottom: 1px solid #e8ecf2;
 }
-.property-block + .property-block {
+.diagram-showcase-card .property-block + .property-block {
   padding-top: 16px;
 }
-.property-block > h2 {
+.diagram-showcase-card .property-block > h2 {
   margin: 0 0 12px;
   color: #667085;
   font-size: 9px;
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
-.property-field {
+.diagram-showcase-card .property-field {
   display: grid;
   gap: 7px;
   margin-bottom: 13px;
 }
-.property-field label,
-.node-relation label {
+.diagram-showcase-card .property-field label,
+.diagram-showcase-card .node-relation label {
   color: #667085;
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
 }
-.property-action-row {
+.diagram-showcase-card .property-action-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
-.property-action-row strong,
-.property-action-row span {
+.diagram-showcase-card .property-action-row strong,
+.diagram-showcase-card .property-action-row span {
   display: block;
 }
-.property-action-row strong {
+.diagram-showcase-card .property-action-row strong {
   font-size: 11px;
 }
-.property-action-row span {
+.diagram-showcase-card .property-action-row span {
   margin-top: 2px;
   color: #98a2b3;
   font-size: 9px;
 }
-.overview-toggle.e-btn,
-.apply-layout-button.e-btn {
+.diagram-showcase-card .overview-toggle.e-btn,
+.diagram-showcase-card .apply-layout-button.e-btn {
   height: 32px;
   border: 1px solid #d3dae5;
   border-radius: 7px;
@@ -304,22 +304,22 @@
   font-size: 10px;
   text-transform: none;
 }
-.overview-toggle.e-btn.overview-toggle-active,
-.apply-layout-button.e-btn {
+.diagram-showcase-card .overview-toggle.e-btn.overview-toggle-active,
+.diagram-showcase-card .apply-layout-button.e-btn {
   border-color: #9eb2e7;
   color: #294da8;
   background: #eef3ff;
 }
-.apply-layout-button.e-btn {
+.diagram-showcase-card .apply-layout-button.e-btn {
   width: 100%;
   height: 35px;
 }
-.selected-node-heading {
+.diagram-showcase-card .selected-node-heading {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.selected-node-heading > span {
+.diagram-showcase-card .selected-node-heading > span {
   display: grid;
   width: 38px;
   height: 38px;
@@ -329,29 +329,29 @@
   background: #eef3ff;
   font-weight: 700;
 }
-.selected-node-heading strong,
-.selected-node-heading small {
+.diagram-showcase-card .selected-node-heading strong,
+.diagram-showcase-card .selected-node-heading small {
   display: block;
 }
-.selected-node-heading strong {
+.diagram-showcase-card .selected-node-heading strong {
   font-size: 12px;
 }
-.selected-node-heading small {
+.diagram-showcase-card .selected-node-heading small {
   color: #8a95a7;
   font-size: 9px;
 }
-.node-details > p {
+.diagram-showcase-card .node-details > p {
   color: #667085;
   font-size: 10px;
   line-height: 1.5;
 }
-.node-relation {
+.diagram-showcase-card .node-relation {
   display: grid;
   gap: 7px;
   margin-top: 13px;
 }
-.node-relation > button,
-.child-list button {
+.diagram-showcase-card .node-relation > button,
+.diagram-showcase-card .child-list button {
   display: flex;
   width: 100%;
   min-height: 34px;
@@ -366,15 +366,15 @@
   text-align: left;
   cursor: pointer;
 }
-.child-list {
+.diagram-showcase-card .child-list {
   display: grid;
   gap: 6px;
 }
-.relation-empty {
+.diagram-showcase-card .relation-empty {
   color: #98a2b3;
   font-size: 10px;
 }
-.overview-panel {
+.diagram-showcase-card .overview-panel {
   position: absolute;
   right: 14px;
   bottom: 14px;
@@ -387,99 +387,92 @@
   background: rgb(255 255 255 / 96%);
   box-shadow: 0 10px 26px rgb(27 42 78 / 16%);
 }
-.overview-header {
+.diagram-showcase-card .overview-header {
   display: grid;
   min-height: 38px;
   align-content: center;
   padding: 2px 7px 6px;
 }
-.overview-header strong,
-.overview-header span {
+.diagram-showcase-card .overview-header strong,
+.diagram-showcase-card .overview-header span {
   display: block;
 }
-.overview-header strong {
+.diagram-showcase-card .overview-header strong {
   font-size: 11px;
 }
-.overview-header span {
+.diagram-showcase-card .overview-header span {
   color: #8a95a7;
   font-size: 9px;
 }
-.e-dropdown-popup .e-item,
-.e-ddl.e-popup .e-list-item {
+.diagram-command-button.e-dropdown-popup .e-item {
+  min-height: 35px;
+  color: #344054;
+  font-size: 11px;
+}
+.diagram-property-dropdown.e-popup .e-list-item {
   min-height: 35px;
   color: #344054;
   font-size: 11px;
 }
 @media (max-width: 1320px) {
-  .layout-tab.e-btn {
+  .diagram-showcase-card .layout-tab.e-btn {
     padding-inline: 8px;
   }
-  .diagram-search {
+  .diagram-showcase-card .diagram-search {
     width: 200px;
   }
 }
 
 /* Search field alignment */
-.diagram-search .e-input {
+.diagram-showcase-card .diagram-search .e-input {
   padding-left: 34px !important;
 }
 
-.diagram-search .e-clear-icon {
+.diagram-showcase-card .diagram-search .e-clear-icon {
   right: 8px;
 }
 
-.search-result {
+.diagram-search-result {
   display: grid;
   min-height: 46px;
   gap: 3px;
   padding: 7px 4px;
 }
 
-.search-result strong,
-.search-result small {
+.diagram-search-result strong,
+.diagram-search-result small {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.search-result strong {
+.diagram-search-result strong {
   color: #273653;
   font-size: 11px;
 }
 
-.search-result small {
+.diagram-search-result small {
   color: #8a95a7;
   font-size: 9px;
 }
 
 /* Final search popup alignment */
-.diagram-search .e-autocomplete.e-input-group {
+.diagram-showcase-card .diagram-search .e-autocomplete.e-input-group {
   padding-left: 0;
 }
 
-.diagram-search .e-autocomplete.e-input-group input.e-input {
+.diagram-showcase-card .diagram-search .e-autocomplete.e-input-group input.e-input {
   padding-left: 34px !important;
   padding-right: 30px !important;
 }
 
-.e-ddl.e-popup .e-list-parent {
-  padding: 4px;
-}
-
-.e-ddl.e-popup .e-list-item {
-  height: auto;
-  min-height: 46px;
-  padding: 0 8px;
-  line-height: normal;
-}
-
-.search-result {
+.diagram-search-result {
   width: 100%;
   min-width: 0;
 }
 
 /* Keep the property arrow attached to the overlay boundary. */
-.diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
+.diagram-showcase-card .diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
   right: 278px;
 }

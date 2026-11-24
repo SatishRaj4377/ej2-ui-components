@@ -530,6 +530,7 @@ export default function DiagramPage() {
         region: "Content",
         mode: "Page",
         canZoomIn: true,
+        canZoomOut: true,
         margin: { left: 45, right: 45, top: 45, bottom: 45 },
       }),
     [],
@@ -785,6 +786,7 @@ export default function DiagramPage() {
       dataSource={data}
       fields={fields}
       value={value}
+      cssClass="diagram-property-dropdown"
       change={(e: any) => change(e.value)}
     />
   );
@@ -895,7 +897,7 @@ export default function DiagramPage() {
         popupHeight="300px"
         popupWidth="310px"
         itemTemplate={(item: ProductNode) => (
-          <div className="search-result">
+          <div className="diagram-search-result">
             <strong>{item.name}</strong>
             <small>
               {item.category}
