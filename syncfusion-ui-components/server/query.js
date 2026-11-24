@@ -157,4 +157,10 @@ function distinctValues({ field, where, take = 1000 }) {
   return out;
 }
 
-module.exports = { queryOrders, distinctValues };
+// Called after records change (Scheduler rescheduling) so the Grid sees fresh data.
+function invalidateQueryCaches() {
+  viewCache.clear();
+  sortKeyCache.clear();
+}
+
+module.exports = { queryOrders, distinctValues, invalidateQueryCaches };
