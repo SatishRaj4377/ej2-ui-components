@@ -1,7 +1,8 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { DataManager } from "@syncfusion/ej2-data";
 import {
   DataBinding,
+  Diagram,
   DiagramComponent,
   DiagramTools,
   HierarchicalTree,
@@ -10,9 +11,16 @@ import {
   MindMap,
   OverviewComponent,
   PrintAndExport,
-  RadialTree,
   Rect,
   SnapConstraints,
+} from "@syncfusion/ej2-react-diagrams";
+import type {
+  Connector,
+  ConnectorModel,
+  IClickEventArgs,
+  LayoutModel,
+  NodeModel,
+  TreeInfo,
 } from "@syncfusion/ej2-react-diagrams";
 import {
   ItemDirective,
@@ -21,7 +29,6 @@ import {
 } from "@syncfusion/ej2-react-navigations";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
 import {
-  AutoCompleteComponent,
   DropDownListComponent,
 } from "@syncfusion/ej2-react-dropdowns";
 import { DropDownButtonComponent } from "@syncfusion/ej2-react-splitbuttons";
@@ -29,12 +36,11 @@ import PageHeader from "../components/PageHeader";
 import { MODULES } from "../components/modules";
 import "../diagram-page.css";
 
-const MODULE = MODULES.find((module) => module.key === "diagram")!;
+const DIAGRAM_MODULE = MODULES.find((module) => module.key === "diagram")!;
 
 type LayoutType =
   | "OrganizationalChart"
   | "HierarchicalTree"
-  | "RadialTree"
   | "MindMap";
 
 type InteractionMode = "Select" | "Pan";
@@ -45,23 +51,31 @@ type Orientation =
   | "RightToLeft";
 type MindMapOrientation = "Horizontal" | "Vertical";
 type NodeCategory = "Executive" | "Division" | "Team" | "Capability";
+type SubtreeOptionValue =
+  | "VerticalAlternate"
+  | "VerticalLeft"
+  | "VerticalRight"
+  | "HorizontalBalanced"
+  | "HorizontalCenter"
+  | "HorizontalLeft"
+  | "HorizontalRight";
+type DiagramExportFormat = "PNG" | "JPG" | "SVG";
 
 interface ProductNode {
   id: string;
   parentId?: string;
   name: string;
-  description: string;
   category: NodeCategory;
   branch?: "Left" | "Right";
-  parentName?: string;
 }
 
-interface SelectOption {
+interface SelectOption<Value extends string = string> {
+  [key: string]: string;
   text: string;
-  value: string;
+  value: Value;
 }
 
-interface SubtreeOption extends SelectOption {
+interface SubtreeOption extends SelectOption<SubtreeOptionValue> {
   orientation: "Vertical" | "Horizontal";
   type: "Alternate" | "Left" | "Right" | "Balanced" | "Center";
 }
@@ -71,21 +85,36 @@ interface NodeTheme {
   stroke: string;
   category: string;
   title: string;
-  description: string;
 }
+
+const isProductNodeData = (value: unknown): value is ProductNode => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return (
+    "id" in value &&
+    typeof value.id === "string" &&
+    "name" in value &&
+    typeof value.name === "string" &&
+    "category" in value &&
+    (value.category === "Executive" ||
+      value.category === "Division" ||
+      value.category === "Team" ||
+      value.category === "Capability")
+  );
+};
 
 const productHierarchy: ProductNode[] = [
   {
     id: "engineering",
     name: "Product Engineering",
-    description: "Product strategy and technical direction",
     category: "Executive",
   },
   {
     id: "platform",
     parentId: "engineering",
     name: "Platform Engineering",
-    description: "Shared infrastructure and developer services",
     category: "Division",
     branch: "Left",
   },
@@ -93,15 +122,6 @@ const productHierarchy: ProductNode[] = [
     id: "experience",
     parentId: "engineering",
     name: "Product Experience",
-    description: "Customer-facing digital experiences",
-    category: "Division",
-    branch: "Right",
-  },
-  {
-    id: "operations",
-    parentId: "engineering",
-    name: "Engineering Operations",
-    description: "Quality, security, and reliability",
     category: "Division",
     branch: "Right",
   },
@@ -109,238 +129,151 @@ const productHierarchy: ProductNode[] = [
     id: "cloud-platform",
     parentId: "platform",
     name: "Cloud Platform",
-    description: "Compute, network, and container services",
     category: "Team",
   },
   {
     id: "data-platform",
     parentId: "platform",
     name: "Data Platform",
-    description: "Storage, analytics, and governance",
     category: "Team",
   },
   {
     id: "developer-platform",
     parentId: "platform",
     name: "Developer Platform",
-    description: "SDKs, tools, and engineering productivity",
     category: "Team",
   },
   {
     id: "web-experience",
     parentId: "experience",
     name: "Web Experience",
-    description: "Responsive browser-based products",
     category: "Team",
   },
   {
     id: "mobile-experience",
     parentId: "experience",
     name: "Mobile Experience",
-    description: "Native mobile applications",
     category: "Team",
   },
   {
     id: "design-system",
     parentId: "experience",
     name: "Design System",
-    description: "Components, themes, and accessibility",
-    category: "Team",
-  },
-  {
-    id: "quality-engineering",
-    parentId: "operations",
-    name: "Quality Engineering",
-    description: "Automation and release quality",
-    category: "Team",
-  },
-  {
-    id: "security-engineering",
-    parentId: "operations",
-    name: "Security Engineering",
-    description: "Application and platform protection",
-    category: "Team",
-  },
-  {
-    id: "site-reliability",
-    parentId: "operations",
-    name: "Site Reliability",
-    description: "Availability and operational excellence",
     category: "Team",
   },
   {
     id: "container-services",
     parentId: "cloud-platform",
     name: "Container Services",
-    description: "Runtime and orchestration",
     category: "Capability",
   },
   {
     id: "cloud-networking",
     parentId: "cloud-platform",
     name: "Cloud Networking",
-    description: "Routing, traffic, and connectivity",
     category: "Capability",
   },
   {
     id: "identity-services",
     parentId: "cloud-platform",
     name: "Identity Services",
-    description: "Authentication and authorization",
     category: "Capability",
   },
   {
     id: "analytics-services",
     parentId: "data-platform",
     name: "Analytics Services",
-    description: "Reporting and business insights",
     category: "Capability",
   },
   {
     id: "data-governance",
     parentId: "data-platform",
     name: "Data Governance",
-    description: "Catalog, quality, and compliance",
     category: "Capability",
   },
   {
     id: "stream-processing",
     parentId: "data-platform",
     name: "Stream Processing",
-    description: "Real-time event processing",
     category: "Capability",
   },
   {
     id: "sdk-foundation",
     parentId: "developer-platform",
     name: "SDK Foundation",
-    description: "Client libraries and integrations",
     category: "Capability",
   },
   {
     id: "developer-portal",
     parentId: "developer-platform",
     name: "Developer Portal",
-    description: "API discovery and documentation",
     category: "Capability",
   },
   {
     id: "commerce-experience",
     parentId: "web-experience",
     name: "Commerce Experience",
-    description: "Catalog and checkout journeys",
     category: "Capability",
   },
   {
     id: "account-experience",
     parentId: "web-experience",
     name: "Account Experience",
-    description: "Profile and preference management",
     category: "Capability",
   },
   {
     id: "mobile-foundation",
     parentId: "mobile-experience",
     name: "Mobile Foundation",
-    description: "Shared native capabilities",
     category: "Capability",
   },
   {
     id: "mobile-commerce",
     parentId: "mobile-experience",
     name: "Mobile Commerce",
-    description: "Mobile purchasing experience",
     category: "Capability",
   },
   {
     id: "component-library",
     parentId: "design-system",
     name: "Component Library",
-    description: "Reusable interface components",
     category: "Capability",
   },
   {
     id: "accessibility",
     parentId: "design-system",
     name: "Accessibility",
-    description: "Inclusive product standards",
-    category: "Capability",
-  },
-  {
-    id: "test-automation",
-    parentId: "quality-engineering",
-    name: "Test Automation",
-    description: "Continuous product validation",
-    category: "Capability",
-  },
-  {
-    id: "release-engineering",
-    parentId: "quality-engineering",
-    name: "Release Engineering",
-    description: "Build and deployment pipelines",
-    category: "Capability",
-  },
-  {
-    id: "application-security",
-    parentId: "security-engineering",
-    name: "Application Security",
-    description: "Secure development practices",
-    category: "Capability",
-  },
-  {
-    id: "cloud-security",
-    parentId: "security-engineering",
-    name: "Cloud Security",
-    description: "Cloud posture and threat protection",
-    category: "Capability",
-  },
-  {
-    id: "observability",
-    parentId: "site-reliability",
-    name: "Observability",
-    description: "Metrics, traces, and alerts",
-    category: "Capability",
-  },
-  {
-    id: "incident-management",
-    parentId: "site-reliability",
-    name: "Incident Management",
-    description: "Response and service recovery",
     category: "Capability",
   },
 ];
 
-const themes: Record<NodeCategory, NodeTheme> = {
+const nodeThemes: Record<NodeCategory, NodeTheme> = {
   Executive: {
     fill: "#243B77",
     stroke: "#172554",
     category: "#D4DEFE",
     title: "#FFF",
-    description: "#E1E8FF",
   },
   Division: {
     fill: "#E8EFFF",
     stroke: "#6484DF",
     category: "#315AC5",
     title: "#17336F",
-    description: "#52678F",
   },
   Team: {
     fill: "#E9F8F2",
     stroke: "#55AF8C",
     category: "#0F805E",
     title: "#10533F",
-    description: "#4D7366",
   },
   Capability: {
     fill: "#FFF5E4",
     stroke: "#DDA046",
     category: "#B8610B",
     title: "#713F12",
-    description: "#8A653C",
   },
 };
-const orientationOptions: SelectOption[] = [
+const orientationOptions: SelectOption<Orientation>[] = [
   { text: "Top to bottom", value: "TopToBottom" },
   { text: "Bottom to top", value: "BottomToTop" },
   { text: "Left to right", value: "LeftToRight" },
@@ -390,23 +323,27 @@ const subtreeOptions: SubtreeOption[] = [
     type: "Right",
   },
 ];
-const mindMapOptions: SelectOption[] = [
+const mindMapOptions: SelectOption<MindMapOrientation>[] = [
   { text: "Horizontal", value: "Horizontal" },
   { text: "Vertical", value: "Vertical" },
 ];
-const exportItems = [
+const exportItems: Array<{
+  text: string;
+  id: DiagramExportFormat;
+  iconCss: string;
+}> = [
   { text: "Export as PNG", id: "PNG", iconCss: "e-icons e-image" },
   { text: "Export as JPEG", id: "JPG", iconCss: "e-icons e-image" },
   { text: "Export as SVG", id: "SVG", iconCss: "e-icons e-file-new" },
 ];
-const fields = { text: "text", value: "value" };
-const connectorPropertiesFor = (layoutType: LayoutType) => ({
-  type:
-    layoutType === "MindMap"
-      ? "Bezier"
-      : layoutType === "RadialTree"
-        ? "Straight"
-        : "Orthogonal",
+const layoutOptions: Array<{ type: LayoutType; label: string }> = [
+  { type: "OrganizationalChart", label: "Organizational" },
+  { type: "HierarchicalTree", label: "Hierarchical" },
+  { type: "MindMap", label: "Mind Map" },
+];
+const propertyDropdownFields = { text: "text", value: "value" };
+const getConnectorPropertiesForLayout = (layoutType: LayoutType) => ({
+  type: layoutType === "MindMap" ? "Bezier" : "Orthogonal",
   cornerRadius:
     layoutType === "OrganizationalChart" || layoutType === "HierarchicalTree"
       ? 10
@@ -417,7 +354,7 @@ const connectorPropertiesFor = (layoutType: LayoutType) => ({
   },
   sourceDecorator: { shape: "None" },
   targetDecorator: {
-    shape: ["MindMap", "RadialTree"].includes(layoutType) ? "None" : "Arrow",
+    shape: layoutType === "MindMap" ? "None" : "Arrow",
     width: 8,
     height: 8,
     style: { fill: "#8291AD", strokeColor: "#8291AD" },
@@ -425,49 +362,49 @@ const connectorPropertiesFor = (layoutType: LayoutType) => ({
 });
 
 export default function DiagramPage() {
-  const diagramRef = useRef<any>(null),
-    searchRef = useRef<any>(null);
-  const dataManager = useMemo(() => new DataManager(productHierarchy), []);
-  const searchData = useMemo(
-    () =>
-      productHierarchy.map((x) => ({
-        ...x,
-        parentName:
-          productHierarchy.find((p) => p.id === x.parentId)?.name || "Root",
-      })),
+  const diagramRef = useRef<DiagramComponent | null>(null);
+  const diagramDataManager = useMemo(
+    () => new DataManager(productHierarchy),
     [],
   );
   const [layoutType, setLayoutType] = useState<LayoutType>(
     "OrganizationalChart",
   );
-  const [tool, setTool] = useState<InteractionMode>("Select");
+  const [interactionMode, setInteractionMode] =
+    useState<InteractionMode>("Select");
   const [orientation, setOrientation] = useState<Orientation>("TopToBottom");
-  const [subtree, setSubtree] = useState("VerticalLeft");
-  const [mindOrientation, setMindOrientation] =
+  const [subtreeOptionValue, setSubtreeOptionValue] =
+    useState<SubtreeOptionValue>("VerticalLeft");
+  const [mindMapOrientation, setMindMapOrientation] =
     useState<MindMapOrientation>("Horizontal");
-  const [showOverview, setShowOverview] = useState(true);
-  const [diagramReady, setDiagramReady] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(true);
-  const [selected, setSelected] = useState<ProductNode>(productHierarchy[0]);
-
-  const diagramId = "product-engineering-diagram";
-  const overviewId = "product-engineering-overview";
-
-  const subtreeSetting = useMemo(
-    () => subtreeOptions.find((x) => x.value === subtree) || subtreeOptions[1],
-    [subtree],
+  const [isOverviewVisible, setIsOverviewVisible] = useState(false);
+  const [isDiagramReady, setIsDiagramReady] = useState(false);
+  const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(true);
+  const [selectedNode, setSelectedNode] = useState<ProductNode>(
+    productHierarchy[0],
   );
-  const orgInfo = useCallback(
-    (node: any, options: any) => {
-      if (!options.hasSubTree) {
-        options.orientation = subtreeSetting.orientation;
-        options.type = subtreeSetting.type;
+
+  const diagramElementId = "product-engineering-diagram";
+  const overviewElementId = "product-engineering-overview";
+
+  const subtreeLayoutSetting = useMemo(
+    () =>
+      subtreeOptions.find(
+        (subtreeOption) => subtreeOption.value === subtreeOptionValue,
+      ) || subtreeOptions[1],
+    [subtreeOptionValue],
+  );
+  const getOrganizationalLayoutInfo = useCallback(
+    (_diagramNode: NodeModel, layoutInfo: TreeInfo) => {
+      if (!layoutInfo.hasSubTree) {
+        layoutInfo.orientation = subtreeLayoutSetting.orientation;
+        layoutInfo.type = subtreeLayoutSetting.type;
       }
     },
-    [subtreeSetting],
+    [subtreeLayoutSetting],
   );
-  const layout = useMemo(() => {
-    const common = {
+  const diagramLayout = useMemo<LayoutModel>(() => {
+    const sharedLayoutOptions = {
       horizontalSpacing: 44,
       verticalSpacing: 64,
       enableAnimation: true,
@@ -475,56 +412,54 @@ export default function DiagramPage() {
     };
     if (layoutType === "OrganizationalChart")
       return {
-        ...common,
+        ...sharedLayoutOptions,
         type: layoutType,
         orientation,
-        getLayoutInfo: orgInfo,
+        getLayoutInfo: getOrganizationalLayoutInfo,
       };
     if (layoutType === "HierarchicalTree")
       return {
-        ...common,
+        ...sharedLayoutOptions,
         type: layoutType,
         orientation,
+        horizontalSpacing: 40,
+        verticalSpacing: 56,
         horizontalAlignment: "Center",
         verticalAlignment: "Center",
         bounds: new Rect(30, 30, 1350, 720),
       };
-    if (layoutType === "RadialTree")
-      return {
-        ...common,
-        type: layoutType,
-        root: "engineering",
-        horizontalSpacing: 50,
-        verticalSpacing: 50,
-      };
     return {
-      ...common,
+      ...sharedLayoutOptions,
       type: "MindMap",
       root: "engineering",
-      orientation: mindOrientation,
+      orientation: mindMapOrientation,
       horizontalSpacing: 56,
       verticalSpacing: 56,
-      getBranch: (node: any) => {
-        const data = node?.data;
+      getBranch: (diagramNode: NodeModel) => {
+        const nodeData = diagramNode.data;
 
-        if (!data || data.id === "engineering") {
+        if (!isProductNodeData(nodeData) || nodeData.id === "engineering") {
           return "Right";
         }
 
-        let current = data;
+        let currentProductNode: ProductNode | undefined = nodeData;
 
-        while (current?.parentId && current.parentId !== "engineering") {
-          current = productHierarchy.find(
-            (item) => item.id === current.parentId,
+        while (
+          currentProductNode?.parentId &&
+          currentProductNode.parentId !== "engineering"
+        ) {
+          const parentProductNodeId: string = currentProductNode.parentId;
+          currentProductNode = productHierarchy.find(
+            (productNode) => productNode.id === parentProductNodeId,
           );
         }
 
-        return current?.branch === "Left" ? "Left" : "Right";
+        return currentProductNode?.branch === "Left" ? "Left" : "Right";
       },
     };
-  }, [layoutType, orientation, orgInfo, mindOrientation]);
+  }, [layoutType, orientation, getOrganizationalLayoutInfo, mindMapOrientation]);
 
-  const fit = useCallback(
+  const fitDiagramToPage = useCallback(
     () =>
       diagramRef.current?.fitToPage({
         region: "Content",
@@ -535,111 +470,86 @@ export default function DiagramPage() {
       }),
     [],
   );
-  const relayout = useCallback(() => {
-    const d = diagramRef.current;
-    if (!d?.nodes?.length) return;
-    d.layout = { ...layout };
-    d.dataBind();
-    d.doLayout();
-    setTimeout(fit, 220);
-  }, [layout, fit]);
+  const reapplyDiagramLayout = useCallback(() => {
+    const diagram = diagramRef.current;
+    if (!diagram?.nodes?.length) return;
+    diagram.layout = { ...diagramLayout };
+    diagram.dataBind();
+    diagram.doLayout();
+    setTimeout(fitDiagramToPage, 220);
+  }, [diagramLayout, fitDiagramToPage]);
 
-  const nodeDefaults = useCallback(
-    (node: any) => {
-      const d = node.data || {},
-        t = themes[d.category] || themes.Team,
-        root = d.id === "engineering";
-      if (layoutType === "RadialTree") {
-        node.width = root ? 112 : d.category === "Division" ? 94 : 82;
-        node.height = node.width;
-        node.shape = { type: "Basic", shape: "Ellipse" };
-        node.annotations = [
-          {
-            content: d.name || "",
-            offset: { x: 0.5, y: 0.45 },
-            margin: { left: 12, right: 12 },
-            style: {
-              color: t.title,
-              fontSize: root ? 11 : 8.5,
-              bold: true,
-              textWrapping: "Wrap",
-              textAlign: "Center",
-            },
-          },
-          {
-            content: (d.category || "").toUpperCase(),
-            offset: { x: 0.5, y: 0.68 },
-            style: { color: t.category, fontSize: 7.5, bold: true },
-          },
-        ];
-      } else {
-        const exec = d.category === "Executive",
-          div = d.category === "Division",
-          cap = d.category === "Capability";
-        node.width =
-          layoutType === "MindMap"
-            ? root
-              ? 220
-              : 176
-            : exec
-              ? 232
-              : div
-                ? 210
-                : cap
-                  ? 186
-                  : 200;
-        node.height =
-          layoutType === "MindMap"
-            ? root
-              ? 78
-              : 62
-            : exec
-              ? 88
-              : div
-                ? 82
-                : 76;
-        node.shape = {
-          type: "Basic",
-          shape: "Rectangle",
-          cornerRadius: root ? 16 : 12,
-        };
-        node.annotations = [
-          {
-            content: (d.category || "").toUpperCase(),
-            offset: { x: 0.5, y: 0.2 },
-            style: { color: t.category, fontSize: 9, bold: true },
-          },
-          {
-            content: d.name || "",
-            offset: { x: 0.5, y: 0.48 },
-            margin: { left: 10, right: 10 },
-            style: {
-              color: t.title,
-              fontSize: exec ? 15 : 13,
-              bold: true,
-              textWrapping: "Wrap",
-              textOverflow: "Ellipsis",
-            },
-          },
-          {
-            content: d.description || "",
-            offset: { x: 0.5, y: 0.75 },
-            margin: { left: 10, right: 10 },
-            style: {
-              color: t.description,
-              fontSize: 9.5,
-              textWrapping: "Wrap",
-              textOverflow: "Ellipsis",
-            },
-          },
-        ];
+  const setNodeDefaults = useCallback(
+    (diagramNode: NodeModel) => {
+      const nodeData = diagramNode.data;
+
+      if (!isProductNodeData(nodeData)) {
+        throw new TypeError("Diagram node data is invalid.");
       }
-      node.style = {
-        fill: t.fill,
-        strokeColor: t.stroke,
-        strokeWidth: root ? 2 : 1.5,
+
+      const nodeTheme = nodeThemes[nodeData.category];
+      const isRootNode = nodeData.id === "engineering";
+      const isExecutiveNode = nodeData.category === "Executive";
+      const isDivisionNode = nodeData.category === "Division";
+      const isCapabilityNode = nodeData.category === "Capability";
+      diagramNode.width =
+        layoutType === "MindMap"
+          ? isRootNode
+            ? 220
+            : 176
+          : isExecutiveNode
+            ? 232
+            : isDivisionNode
+              ? 210
+              : isCapabilityNode
+                ? 186
+                : 200;
+      diagramNode.height =
+        layoutType === "MindMap"
+          ? isRootNode
+            ? 78
+            : 62
+          : isExecutiveNode
+            ? 88
+            : isDivisionNode
+              ? 82
+              : 76;
+      diagramNode.shape = {
+        type: "Basic",
+        shape: "Rectangle",
+        cornerRadius: isRootNode ? 16 : 12,
       };
-      node.collapseIcon = {
+      diagramNode.annotations = [
+        {
+          content: (nodeData.category || "").toUpperCase(),
+          offset: { x: 0.5, y: 0.32 },
+          style: {
+            color: nodeTheme.category,
+            fontSize: 10,
+            bold: true,
+            textAlign: "Center",
+          },
+        },
+        {
+          content: nodeData.name || "",
+          offset: { x: 0.5, y: 0.68 },
+          margin: { left: 10, right: 10 },
+          style: {
+            color: nodeTheme.title,
+            fontSize: isExecutiveNode ? 16 : 14,
+            bold: true,
+            textWrapping: "Wrap",
+            textOverflow: "Ellipsis",
+            textAlign: "Center",
+          },
+        },
+      ];
+      diagramNode.style = {
+        fill: nodeTheme.fill,
+        strokeColor: nodeTheme.stroke,
+        strokeWidth: isRootNode ? 2 : 1.5,
+      };
+      diagramNode.collapseIcon = {
         shape: "Minus",
         width: 20,
         height: 20,
@@ -649,7 +559,7 @@ export default function DiagramPage() {
         borderWidth: 2,
         iconColor: "#FFF",
       };
-      node.expandIcon = {
+      diagramNode.expandIcon = {
         shape: "Plus",
         width: 20,
         height: 20,
@@ -659,53 +569,60 @@ export default function DiagramPage() {
         borderWidth: 2,
         iconColor: "#17336F",
       };
-      return node;
+      return diagramNode;
     },
     [layoutType],
   );
-  const connectorDefaults = useCallback(
-    (c: any) => {
-      Object.assign(c, connectorPropertiesFor(layoutType));
-      return c;
+  const setConnectorDefaults = useCallback(
+    (connector: ConnectorModel) => {
+      Object.assign(connector, getConnectorPropertiesForLayout(layoutType));
+      return connector;
     },
     [layoutType],
   );
 
-  const details = useMemo(
+  const selectedNodeDetails = useMemo(
     () => ({
-      item: selected,
-      parent: productHierarchy.find((x) => x.id === selected?.parentId),
-      children: productHierarchy.filter((x) => x.parentId === selected?.id),
+      selected: selectedNode,
+      parentNode: productHierarchy.find(
+        (productNode) => productNode.id === selectedNode?.parentId,
+      ),
+      childNodes: productHierarchy.filter(
+        (productNode) => productNode.parentId === selectedNode?.id,
+      ),
     }),
-    [selected],
+    [selectedNode],
   );
-  const reveal = useCallback(
-    (itemData: ProductNode | string | null | undefined) => {
-      const item =
-        typeof itemData === "string"
-          ? productHierarchy.find((entry) => entry.name === itemData)
+  const revealNodeInDiagram = useCallback(
+    (nodeData: ProductNode | string | null | undefined) => {
+      const matchedProductNode =
+        typeof nodeData === "string"
+          ? productHierarchy.find((productNode) => productNode.name === nodeData)
           : productHierarchy.find(
-              (entry) =>
-                entry.id === itemData?.id || entry.name === itemData?.name,
+              (productNode) =>
+                productNode.id === nodeData?.id ||
+                productNode.name === nodeData?.name,
             );
 
       const diagram = diagramRef.current;
 
-      if (!diagram || !item) {
+      if (!diagram || !matchedProductNode) {
         return;
       }
 
-      let parentId = item.parentId;
+      let parentNodeId = matchedProductNode.parentId;
 
-      while (parentId) {
-        const parentNode = diagram.getObject(parentId);
+      while (parentNodeId) {
+        const ancestorNode = diagram.nodes.find(
+          (diagramNode) => diagramNode.id === parentNodeId,
+        );
 
-        if (parentNode) {
-          parentNode.isExpanded = true;
+        if (ancestorNode) {
+          ancestorNode.isExpanded = true;
         }
 
-        parentId = productHierarchy.find(
-          (entry) => entry.id === parentId,
+        parentNodeId = productHierarchy.find(
+          (productNode) => productNode.id === parentNodeId,
         )?.parentId;
       }
 
@@ -713,32 +630,29 @@ export default function DiagramPage() {
       diagram.doLayout();
 
       window.setTimeout(() => {
-        const node =
-          diagram.getObject(item.id) ||
-          diagram.nodes.find(
-            (candidate: any) => candidate.data?.id === item.id,
-          );
+        const diagramNode = diagram.nodes.find(
+          (candidateNode) => candidateNode.id === matchedProductNode.id,
+        );
 
-        if (!node) {
+        if (!diagramNode) {
           return;
         }
 
         diagram.clearSelection();
-        diagram.select([node]);
+        diagram.select([diagramNode]);
 
-        if (node.wrapper?.bounds) {
-          diagram.bringIntoView(node.wrapper.bounds);
+        if (diagramNode.wrapper?.bounds) {
+          diagram.bringIntoView(diagramNode.wrapper.bounds);
         }
 
-        setSelected(item);
-        setPanelOpen(true);
-        searchRef.current?.hidePopup();
+        setSelectedNode(matchedProductNode);
+        setIsPropertyPanelOpen(true);
       }, 180);
     },
     [],
   );
 
-  const exportDiagram = (format: string) =>
+  const exportDiagramFile = (format: DiagramExportFormat) =>
     diagramRef.current?.exportDiagram({
       fileName: "product-engineering-structure",
       format,
@@ -746,24 +660,42 @@ export default function DiagramPage() {
       region: "Content",
       margin: { left: 25, right: 25, top: 25, bottom: 25 },
     });
-  const print = () =>
+  const printDiagram = () =>
     diagramRef.current?.print({
       region: "Content",
       pageOrientation: "Landscape",
       stretch: "Meet",
       multiplePage: false,
     });
-  const ddl = (
-    data: SelectOption[],
-    value: string,
-    change: (value: any) => void,
+  const renderPropertyDropdown = <OptionValue extends string,>(
+    options: SelectOption<OptionValue>[],
+    selectedValue: OptionValue,
+    onValueChange: (value: OptionValue) => void,
   ) => (
     <DropDownListComponent
-      dataSource={data}
-      fields={fields}
-      value={value}
+      dataSource={options}
+      fields={propertyDropdownFields}
+      value={selectedValue}
       cssClass="diagram-property-dropdown"
-      change={(e: any) => change(e.value)}
+      change={(changeEventArgs) => {
+        if (typeof changeEventArgs.value !== "string") {
+          throw new TypeError(
+            "Diagram property dropdown values must be strings.",
+          );
+        }
+
+        const selectedOption = options.find(
+          (option) => option.value === changeEventArgs.value,
+        );
+
+        if (!selectedOption) {
+          throw new RangeError(
+            "Diagram property dropdown value is not one of its options.",
+          );
+        }
+
+        onValueChange(selectedOption.value);
+      }}
     />
   );
 
@@ -780,67 +712,65 @@ export default function DiagramPage() {
         return;
       }
 
-      diagram.connectors.forEach((connector: any) => {
-        const oldProperties = {
+      diagram.connectors.forEach((connector) => {
+        const previousConnectorProperties = {
           type: connector.type,
           cornerRadius: connector.cornerRadius,
           style: connector.style,
           sourceDecorator: connector.sourceDecorator,
           targetDecorator: connector.targetDecorator,
         };
-        const nextProperties = connectorPropertiesFor(nextLayout);
+        const nextConnectorProperties =
+          getConnectorPropertiesForLayout(nextLayout);
 
-        Object.assign(connector, nextProperties);
+        Object.assign(connector, nextConnectorProperties);
         diagram.connectorPropertyChange(
-          connector,
-          oldProperties,
-          nextProperties,
+          connector as Connector,
+          previousConnectorProperties as Connector,
+          nextConnectorProperties as Connector,
         );
       });
 
-      fit();
+      fitDiagramToPage();
     });
   };
 
-  const tabs = () => (
+  const renderLayoutTabs = () => (
     <div className="layout-tabs">
-      {[
-        ["OrganizationalChart", "Organizational"],
-        ["HierarchicalTree", "Hierarchical"],
-        ["RadialTree", "Radial"],
-        ["MindMap", "Mind Map"],
-      ].map(([v, l]) => (
+      {layoutOptions.map(({ type: layoutValue, label: layoutLabel }) => (
         <ButtonComponent
-          key={v}
-          content={l}
+          key={layoutValue}
+          content={layoutLabel}
           cssClass={
-            layoutType === v ? "layout-tab layout-tab-active" : "layout-tab"
+            layoutType === layoutValue
+              ? "layout-tab layout-tab-active"
+              : "layout-tab"
           }
-          onClick={() => changeLayout(v as LayoutType)}
+          onClick={() => changeLayout(layoutValue)}
         />
       ))}
     </div>
   );
-  const actions = () => (
+  const renderInteractionTools = () => (
     <div className="interaction-tools">
       <ButtonComponent
         cssClass={
-          tool === "Select"
+          interactionMode === "Select"
             ? "diagram-icon-button command-active"
             : "diagram-icon-button"
         }
         iconCss="e-icons e-mouse-pointer"
-        onClick={() => setTool("Select")}
+        onClick={() => setInteractionMode("Select")}
         title="Select"
       />
       <ButtonComponent
         cssClass={
-          tool === "Pan"
+          interactionMode === "Pan"
             ? "diagram-icon-button command-active"
             : "diagram-icon-button"
         }
         iconCss="e-icons e-pan"
-        onClick={() => setTool("Pan")}
+        onClick={() => setInteractionMode("Pan")}
         title="Pan"
       />
       <span className="command-separator" />
@@ -862,101 +792,69 @@ export default function DiagramPage() {
         cssClass="diagram-command-button"
         iconCss="e-icons e-zoom-to-fit"
         content="Fit"
-        onClick={fit}
+        onClick={fitDiagramToPage}
       />
       <ButtonComponent
         cssClass="diagram-command-button"
         iconCss="e-icons e-refresh"
         content="Re-layout"
-        onClick={relayout}
+        onClick={reapplyDiagramLayout}
       />
     </div>
   );
-  const search = () => (
-    <div className="diagram-search">
-      <span
-        className="e-icons e-search search-leading-icon"
-        aria-hidden="true"
-      />
-
-      <AutoCompleteComponent
-        ref={searchRef}
-        dataSource={searchData}
-        fields={{ value: "name" }}
-        placeholder="Search nodes"
-        filterType="Contains"
-        allowCustom={false}
-        highlight
-        showClearButton
-        suggestionCount={8}
-        popupHeight="300px"
-        popupWidth="310px"
-        itemTemplate={(item: ProductNode) => (
-          <div className="diagram-search-result">
-            <strong>{item.name}</strong>
-            <small>
-              {item.category}
-              {item.parentName !== "Root" ? ` · ${item.parentName}` : ""}
-            </small>
-          </div>
-        )}
-        select={(args) => reveal(args.itemData)}
-      />
-    </div>
-  );
-
-  const output = () => (
+  const renderOutputTools = () => (
     <div className="output-tools">
       <DropDownButtonComponent
         cssClass="diagram-command-button"
         iconCss="e-icons e-export"
         content="Export"
         items={exportItems}
-        select={(e: any) => exportDiagram(e.item.id)}
+        select={(selectEventArgs) =>
+          exportDiagramFile(selectEventArgs.item.id)
+        }
       />
       <ButtonComponent
         cssClass="diagram-command-button"
         iconCss="e-icons e-print"
         content="Print"
-        onClick={print}
+        onClick={printDiagram}
       />
     </div>
   );
 
   return (
     <div className="page">
-      <PageHeader module={MODULE} />
+      <PageHeader module={DIAGRAM_MODULE} />
 
       <div className="card diagram-showcase-card">
         <div className="diagram-page">
           <ToolbarComponent id="diagram-toolbar">
             <ItemsDirective>
-              <ItemDirective template={tabs} />
+              <ItemDirective template={renderLayoutTabs} />
               <ItemDirective type="Separator" />
-              <ItemDirective template={actions} />
-              <ItemDirective template={search} align="Right" />
+              <ItemDirective template={renderInteractionTools} />
               <ItemDirective type="Separator" align="Right" />
-              <ItemDirective template={output} align="Right" />
+              <ItemDirective template={renderOutputTools} align="Right" />
             </ItemsDirective>
           </ToolbarComponent>
           <section className="diagram-workspace">
             <div className="diagram-canvas">
               <DiagramComponent
-                id={diagramId}
+                id={diagramElementId}
                 ref={diagramRef}
                 width="100%"
                 height="100%"
                 dataSourceSettings={{
                   id: "id",
                   parentId: "parentId",
-                  dataSource: dataManager,
+                  dataSource: diagramDataManager,
                   root: "engineering",
                 }}
-                layout={layout}
-                getNodeDefaults={nodeDefaults}
-                getConnectorDefaults={connectorDefaults}
+                layout={diagramLayout}
+                getNodeDefaults={setNodeDefaults}
+                getConnectorDefaults={setConnectorDefaults}
                 tool={
-                  tool === "Pan"
+                  interactionMode === "Pan"
                     ? DiagramTools.ZoomPan
                     : DiagramTools.SingleSelect
                 }
@@ -969,12 +867,24 @@ export default function DiagramPage() {
                   scrollLimit: "Infinity",
                   canAutoScroll: true,
                 }}
-                click={(e: any) => {
-                  const d = e?.element?.data;
-                  if (d?.id)
-                    setSelected(
-                      productHierarchy.find((x) => x.id === d.id) || d,
+                click={(clickEventArgs: IClickEventArgs) => {
+                  if (clickEventArgs.element instanceof Diagram) {
+                    return;
+                  }
+
+                  const clickedNodeData =
+                    "nodes" in clickEventArgs.element
+                      ? clickEventArgs.element.nodes?.[0]?.data
+                      : "data" in clickEventArgs.element
+                        ? clickEventArgs.element.data
+                        : undefined;
+
+                  if (isProductNodeData(clickedNodeData)) {
+                    const matchingProductNode = productHierarchy.find(
+                      (productNode) => productNode.id === clickedNodeData.id,
                     );
+                    setSelectedNode(matchingProductNode ?? clickedNodeData);
+                  }
                 }}
                 dataLoaded={() => {
                   window.requestAnimationFrame(() => {
@@ -985,8 +895,8 @@ export default function DiagramPage() {
                     }
 
                     diagram.doLayout();
-                    fit();
-                    setDiagramReady(true);
+                    fitDiagramToPage();
+                    setIsDiagramReady(true);
                   });
                 }}
               >
@@ -994,22 +904,21 @@ export default function DiagramPage() {
                   services={[
                     DataBinding,
                     HierarchicalTree,
-                    RadialTree,
                     MindMap,
                     LayoutAnimation,
                     PrintAndExport,
                   ]}
                 />
               </DiagramComponent>
-              {showOverview && diagramReady && (
+              {isOverviewVisible && isDiagramReady && (
                 <aside className="overview-panel">
                   <div className="overview-header">
                     <strong>Overview</strong>
                     <span>Drag the viewport to navigate</span>
                   </div>
                   <OverviewComponent
-                    id={overviewId}
-                    sourceID={diagramId}
+                    id={overviewElementId}
+                    sourceID={diagramElementId}
                     width="230px"
                     height="135px"
                   />
@@ -1019,14 +928,18 @@ export default function DiagramPage() {
             <ButtonComponent
               cssClass="property-edge-button"
               iconCss={
-                panelOpen ? "e-icons e-chevron-right" : "e-icons e-chevron-left"
+                isPropertyPanelOpen
+                  ? "e-icons e-chevron-right"
+                  : "e-icons e-chevron-left"
               }
-              onClick={() => setPanelOpen((v) => !v)}
-              title={panelOpen ? "Hide properties" : "Show properties"}
+              onClick={() =>
+                setIsPropertyPanelOpen((isOpen) => !isOpen)
+              }
+              title={isPropertyPanelOpen ? "Hide properties" : "Show properties"}
             />
             <aside
               className={
-                panelOpen
+                isPropertyPanelOpen
                   ? "property-panel property-panel-open"
                   : "property-panel"
               }
@@ -1048,15 +961,19 @@ export default function DiagramPage() {
                     </div>
                     <ButtonComponent
                       cssClass={
-                        showOverview
+                        isOverviewVisible
                           ? "overview-toggle overview-toggle-active"
                           : "overview-toggle"
                       }
                       iconCss={
-                        showOverview ? "e-icons e-eye" : "e-icons e-eye-slash"
+                        isOverviewVisible
+                          ? "e-icons e-eye"
+                          : "e-icons e-eye-slash"
                       }
-                      content={showOverview ? "On" : "Off"}
-                      onClick={() => setShowOverview((v) => !v)}
+                      content={isOverviewVisible ? "On" : "Off"}
+                      onClick={() =>
+                        setIsOverviewVisible((isVisible) => !isVisible)
+                      }
                     />
                   </div>
                 </section>
@@ -1065,20 +982,28 @@ export default function DiagramPage() {
                     <h2>Organizational layout</h2>
                     <div className="property-field">
                       <label>Orientation</label>
-                      {ddl(orientationOptions, orientation, (value) => {
-                        setOrientation(value as Orientation);
-                        window.requestAnimationFrame(fit);
-                      })}
+                      {renderPropertyDropdown(
+                        orientationOptions,
+                        orientation,
+                        (value) => {
+                          setOrientation(value);
+                          window.requestAnimationFrame(fitDiagramToPage);
+                        },
+                      )}
                     </div>
                     <div className="property-field">
                       <label>Subtree alignment</label>
-                      {ddl(subtreeOptions, subtree, setSubtree)}
+                      {renderPropertyDropdown(
+                        subtreeOptions,
+                        subtreeOptionValue,
+                        setSubtreeOptionValue,
+                      )}
                     </div>
                     <ButtonComponent
                       cssClass="apply-layout-button"
                       iconCss="e-icons e-refresh"
                       content="Apply layout"
-                      onClick={relayout}
+                      onClick={reapplyDiagramLayout}
                     />
                   </section>
                 )}
@@ -1087,13 +1012,17 @@ export default function DiagramPage() {
                     <h2>Hierarchical layout</h2>
                     <div className="property-field">
                       <label>Orientation</label>
-                      {ddl(orientationOptions, orientation, setOrientation)}
+                      {renderPropertyDropdown(
+                        orientationOptions,
+                        orientation,
+                        setOrientation,
+                      )}
                     </div>
                     <ButtonComponent
                       cssClass="apply-layout-button"
                       iconCss="e-icons e-refresh"
                       content="Apply layout"
-                      onClick={relayout}
+                      onClick={reapplyDiagramLayout}
                     />
                   </section>
                 )}
@@ -1102,49 +1031,68 @@ export default function DiagramPage() {
                     <h2>Mind-map layout</h2>
                     <div className="property-field">
                       <label>Orientation</label>
-                      {ddl(mindMapOptions, mindOrientation, (value) => {
-                        setMindOrientation(value as MindMapOrientation);
-                        window.requestAnimationFrame(fit);
-                      })}
+                      {renderPropertyDropdown(
+                        mindMapOptions,
+                        mindMapOrientation,
+                        (value) => {
+                          setMindMapOrientation(value);
+                          window.requestAnimationFrame(fitDiagramToPage);
+                        },
+                      )}
                     </div>
                     <ButtonComponent
                       cssClass="apply-layout-button"
                       iconCss="e-icons e-refresh"
                       content="Apply layout"
-                      onClick={relayout}
+                      onClick={reapplyDiagramLayout}
                     />
                   </section>
                 )}
-                {details.item && (
+                {selectedNodeDetails.selected && (
                   <section className="property-block node-details">
                     <h2>Selected node</h2>
                     <div className="selected-node-heading">
-                      <span>{details.item.category?.charAt(0)}</span>
+                      <span>
+                        {selectedNodeDetails.selected.category?.charAt(0)}
+                      </span>
                       <div>
-                        <strong>{details.item.name}</strong>
-                        <small>{details.item.category}</small>
+                        <strong>{selectedNodeDetails.selected.name}</strong>
+                        <small>{selectedNodeDetails.selected.category}</small>
                       </div>
                     </div>
-                    <p>{details.item.description}</p>
                     <div className="node-relation">
                       <label>Parent</label>
-                      {details.parent ? (
-                        <button onClick={() => reveal(details.parent)}>
+                      {selectedNodeDetails.parentNode ? (
+                        <button
+                          onClick={() =>
+                            revealNodeInDiagram(
+                              selectedNodeDetails.parentNode,
+                            )
+                          }
+                        >
                           <span className="e-icons e-chevron-up" />
-                          {details.parent.name}
+                          {selectedNodeDetails.parentNode.name}
                         </button>
                       ) : (
                         <span className="relation-empty">Root node</span>
                       )}
                     </div>
                     <div className="node-relation">
-                      <label>Direct children ({details.children.length})</label>
-                      {details.children.length ? (
+                      <label>
+                        Direct children (
+                        {selectedNodeDetails.childNodes.length})
+                      </label>
+                      {selectedNodeDetails.childNodes.length ? (
                         <div className="child-list">
-                          {details.children.map((c) => (
-                            <button key={c.id} onClick={() => reveal(c)}>
+                          {selectedNodeDetails.childNodes.map((childNode) => (
+                            <button
+                              key={childNode.id}
+                              onClick={() =>
+                                revealNodeInDiagram(childNode)
+                              }
+                            >
                               <span className="e-icons e-chevron-right" />
-                              {c.name}
+                              {childNode.name}
                             </button>
                           ))}
                         </div>
