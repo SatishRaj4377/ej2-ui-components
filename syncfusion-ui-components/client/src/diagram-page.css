@@ -6,6 +6,10 @@
   overflow: hidden;
 }
 
+#product-engineering-diagramcontent {
+  overflow: hidden !important;
+}
+
 .diagram-showcase-card .diagram-page {
   min-height: 620px;
 }
@@ -24,7 +28,8 @@
   flex: 0 0 54px;
   padding: 7px 8px;
   border-radius: 10px 10px 0 0;
-  background: #fff;
+  border-bottom: 1px solid #e1e6ee;
+  background: #f8f9fc;
 }
 .diagram-showcase-card #diagram-toolbar .e-toolbar-items,
 .diagram-showcase-card #diagram-toolbar .e-toolbar-item {

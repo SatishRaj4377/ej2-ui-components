@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataManager } from "@syncfusion/ej2-data";
 import {
+  ConnectorConstraints,
   DataBinding,
   Diagram,
   DiagramComponent,
@@ -219,6 +220,10 @@ const getMindMapToggleOffset = (
   nodeData: ProductNode,
   orientation: MindMapOrientation,
 ) => {
+  if (orientation === "Horizontal" && nodeData.id === "engineering") {
+    return { x: 0.5, y: 1 };
+  }
+
   const branch = getProductNodeBranch(nodeData);
 
   if (orientation === "Horizontal") {
@@ -324,6 +329,7 @@ const layoutOptions: Array<{ type: LayoutType; label: string }> = [
 ];
 const propertyDropdownFields = { text: "text", value: "value" };
 const getConnectorPropertiesForLayout = (layoutType: LayoutType) => ({
+  constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
   type: layoutType === "MindMap" ? "Bezier" : "Orthogonal",
   cornerRadius:
     layoutType === "OrganizationalChart" || layoutType === "HierarchicalTree"
@@ -360,7 +366,7 @@ export default function DiagramPage() {
     useState<MindMapOrientation>("Horizontal");
   const [isOverviewVisible, setIsOverviewVisible] = useState(false);
   const [isDiagramReady, setIsDiagramReady] = useState(false);
-  const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(true);
+  const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<ProductNode>(
     productHierarchy[0],
   );
@@ -529,7 +535,7 @@ export default function DiagramPage() {
         offset: toggleIconOffset,
         fill: "#17336F",
         borderColor: "#FFF",
-        borderWidth: 2,
+        borderWidth: 1,
         iconColor: "#FFF",
       };
       diagramNode.expandIcon = {
@@ -539,7 +545,7 @@ export default function DiagramPage() {
         offset: toggleIconOffset,
         fill: "#FFF",
         borderColor: "#17336F",
-        borderWidth: 2,
+        borderWidth: 1,
         iconColor: "#17336F",
       };
       return diagramNode;
@@ -600,6 +606,7 @@ export default function DiagramPage() {
     });
     diagram.connectors.forEach((connector) => {
       const previousConnectorProperties = {
+        constraints: connector.constraints,
         type: connector.type,
         cornerRadius: connector.cornerRadius,
         style: connector.style,
