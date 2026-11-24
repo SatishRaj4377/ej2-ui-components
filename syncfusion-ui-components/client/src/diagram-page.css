@@ -373,5 +373,5 @@
 
 /* Keep the property arrow attached to the overlay boundary. */
 .diagram-showcase-card .diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
-  right: 278px;
+  right: 270px;
 }
