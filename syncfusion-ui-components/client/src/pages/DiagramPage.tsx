@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataManager } from "@syncfusion/ej2-data";
 import {
+  ConnectorConstraints,
   DataBinding,
   Diagram,
   DiagramComponent,
@@ -28,20 +29,14 @@ import {
   ToolbarComponent,
 } from "@syncfusion/ej2-react-navigations";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
-import {
-  DropDownListComponent,
-} from "@syncfusion/ej2-react-dropdowns";
+import { DropDownListComponent } from "@syncfusion/ej2-react-dropdowns";
 import { DropDownButtonComponent } from "@syncfusion/ej2-react-splitbuttons";
 import PageHeader from "../components/PageHeader";
 import { MODULES } from "../components/modules";
-import "../diagram-page.css";
 
 const DIAGRAM_MODULE = MODULES.find((module) => module.key === "diagram")!;
 
-type LayoutType =
-  | "OrganizationalChart"
-  | "HierarchicalTree"
-  | "MindMap";
+type LayoutType = "OrganizationalChart" | "HierarchicalTree" | "MindMap";
 
 type InteractionMode = "Select" | "Pan";
 type Orientation =
@@ -219,6 +214,10 @@ const getMindMapToggleOffset = (
   nodeData: ProductNode,
   orientation: MindMapOrientation,
 ) => {
+  if (orientation === "Horizontal" && nodeData.id === "engineering") {
+    return { x: 0.5, y: 1 };
+  }
+
   const branch = getProductNodeBranch(nodeData);
 
   if (orientation === "Horizontal") {
@@ -324,6 +323,7 @@ const layoutOptions: Array<{ type: LayoutType; label: string }> = [
 ];
 const propertyDropdownFields = { text: "text", value: "value" };
 const getConnectorPropertiesForLayout = (layoutType: LayoutType) => ({
+  constraints: ConnectorConstraints.Default & ~ConnectorConstraints.Select,
   type: layoutType === "MindMap" ? "Bezier" : "Orthogonal",
   cornerRadius:
     layoutType === "OrganizationalChart" || layoutType === "HierarchicalTree"
@@ -360,7 +360,7 @@ export default function DiagramPage() {
     useState<MindMapOrientation>("Horizontal");
   const [isOverviewVisible, setIsOverviewVisible] = useState(false);
   const [isDiagramReady, setIsDiagramReady] = useState(false);
-  const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(true);
+  const [isPropertyPanelOpen, setIsPropertyPanelOpen] = useState(false);
   const [selectedNode, setSelectedNode] = useState<ProductNode>(
     productHierarchy[0],
   );
@@ -426,7 +426,12 @@ export default function DiagramPage() {
         return getProductNodeBranch(nodeData);
       },
     };
-  }, [layoutType, orientation, getOrganizationalLayoutInfo, mindMapOrientation]);
+  }, [
+    layoutType,
+    orientation,
+    getOrganizationalLayoutInfo,
+    mindMapOrientation,
+  ]);
 
   const fitDiagramToPage = useCallback(
     () =>
@@ -529,7 +534,7 @@ export default function DiagramPage() {
         offset: toggleIconOffset,
         fill: "#17336F",
         borderColor: "#FFF",
-        borderWidth: 2,
+        borderWidth: 1,
         iconColor: "#FFF",
       };
       diagramNode.expandIcon = {
@@ -539,7 +544,7 @@ export default function DiagramPage() {
         offset: toggleIconOffset,
         fill: "#FFF",
         borderColor: "#17336F",
-        borderWidth: 2,
+        borderWidth: 1,
         iconColor: "#17336F",
       };
       return diagramNode;
@@ -600,6 +605,7 @@ export default function DiagramPage() {
     });
     diagram.connectors.forEach((connector) => {
       const previousConnectorProperties = {
+        constraints: connector.constraints,
         type: connector.type,
         cornerRadius: connector.cornerRadius,
         style: connector.style,
@@ -617,11 +623,7 @@ export default function DiagramPage() {
       );
     });
     reapplyDiagramLayout();
-  }, [
-    layoutType,
-    reapplyDiagramLayout,
-    setNodeDefaults,
-  ]);
+  }, [layoutType, reapplyDiagramLayout, setNodeDefaults]);
   const setConnectorDefaults = useCallback(
     (connector: ConnectorModel) => {
       Object.assign(connector, getConnectorPropertiesForLayout(layoutType));
@@ -646,7 +648,9 @@ export default function DiagramPage() {
     (nodeData: ProductNode | string | null | undefined) => {
       const matchedProductNode =
         typeof nodeData === "string"
-          ? productHierarchy.find((productNode) => productNode.name === nodeData)
+          ? productHierarchy.find(
+              (productNode) => productNode.name === nodeData,
+            )
           : productHierarchy.find(
               (productNode) =>
                 productNode.id === nodeData?.id ||
@@ -716,7 +720,7 @@ export default function DiagramPage() {
       stretch: "Meet",
       multiplePage: false,
     });
-  const renderPropertyDropdown = <OptionValue extends string,>(
+  const renderPropertyDropdown = <OptionValue extends string>(
     options: SelectOption<OptionValue>[],
     selectedValue: OptionValue,
     onValueChange: (value: OptionValue) => void,
@@ -830,9 +834,7 @@ export default function DiagramPage() {
         iconCss="e-icons e-export"
         content="Export"
         items={exportItems}
-        select={(selectEventArgs) =>
-          exportDiagramFile(selectEventArgs.item.id)
-        }
+        select={(selectEventArgs) => exportDiagramFile(selectEventArgs.item.id)}
       />
       <ButtonComponent
         cssClass="diagram-command-button"
@@ -953,10 +955,10 @@ export default function DiagramPage() {
                   ? "e-icons e-chevron-right"
                   : "e-icons e-chevron-left"
               }
-              onClick={() =>
-                setIsPropertyPanelOpen((isOpen) => !isOpen)
+              onClick={() => setIsPropertyPanelOpen((isOpen) => !isOpen)}
+              title={
+                isPropertyPanelOpen ? "Hide properties" : "Show properties"
               }
-              title={isPropertyPanelOpen ? "Hide properties" : "Show properties"}
             />
             <aside
               className={
@@ -1086,9 +1088,7 @@ export default function DiagramPage() {
                       {selectedNodeDetails.parentNode ? (
                         <button
                           onClick={() =>
-                            revealNodeInDiagram(
-                              selectedNodeDetails.parentNode,
-                            )
+                            revealNodeInDiagram(selectedNodeDetails.parentNode)
                           }
                         >
                           <span className="e-icons e-chevron-up" />
@@ -1100,17 +1100,15 @@ export default function DiagramPage() {
                     </div>
                     <div className="node-relation">
                       <label>
-                        Direct children (
-                        {selectedNodeDetails.childNodes.length})
+                        Direct children ({selectedNodeDetails.childNodes.length}
+                        )
                       </label>
                       {selectedNodeDetails.childNodes.length ? (
                         <div className="child-list">
                           {selectedNodeDetails.childNodes.map((childNode) => (
                             <button
                               key={childNode.id}
-                              onClick={() =>
-                                revealNodeInDiagram(childNode)
-                              }
+                              onClick={() => revealNodeInDiagram(childNode)}
                             >
                               <span className="e-icons e-chevron-right" />
                               {childNode.name}
