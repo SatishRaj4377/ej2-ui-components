@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DataManager } from "@syncfusion/ej2-data";
 import {
   DataBinding,
@@ -126,12 +126,6 @@ const productHierarchy: ProductNode[] = [
     branch: "Right",
   },
   {
-    id: "cloud-platform",
-    parentId: "platform",
-    name: "Cloud Platform",
-    category: "Team",
-  },
-  {
     id: "data-platform",
     parentId: "platform",
     name: "Data Platform",
@@ -156,30 +150,6 @@ const productHierarchy: ProductNode[] = [
     category: "Team",
   },
   {
-    id: "design-system",
-    parentId: "experience",
-    name: "Design System",
-    category: "Team",
-  },
-  {
-    id: "container-services",
-    parentId: "cloud-platform",
-    name: "Container Services",
-    category: "Capability",
-  },
-  {
-    id: "cloud-networking",
-    parentId: "cloud-platform",
-    name: "Cloud Networking",
-    category: "Capability",
-  },
-  {
-    id: "identity-services",
-    parentId: "cloud-platform",
-    name: "Identity Services",
-    category: "Capability",
-  },
-  {
     id: "analytics-services",
     parentId: "data-platform",
     name: "Analytics Services",
@@ -189,12 +159,6 @@ const productHierarchy: ProductNode[] = [
     id: "data-governance",
     parentId: "data-platform",
     name: "Data Governance",
-    category: "Capability",
-  },
-  {
-    id: "stream-processing",
-    parentId: "data-platform",
-    name: "Stream Processing",
     category: "Capability",
   },
   {
@@ -233,19 +197,36 @@ const productHierarchy: ProductNode[] = [
     name: "Mobile Commerce",
     category: "Capability",
   },
-  {
-    id: "component-library",
-    parentId: "design-system",
-    name: "Component Library",
-    category: "Capability",
-  },
-  {
-    id: "accessibility",
-    parentId: "design-system",
-    name: "Accessibility",
-    category: "Capability",
-  },
 ];
+
+const getProductNodeBranch = (nodeData: ProductNode) => {
+  let currentProductNode: ProductNode | undefined = nodeData;
+
+  while (
+    currentProductNode?.parentId &&
+    currentProductNode.parentId !== "engineering"
+  ) {
+    const parentProductNodeId: string = currentProductNode.parentId;
+    currentProductNode = productHierarchy.find(
+      (productNode) => productNode.id === parentProductNodeId,
+    );
+  }
+
+  return currentProductNode?.branch === "Left" ? "Left" : "Right";
+};
+
+const getMindMapToggleOffset = (
+  nodeData: ProductNode,
+  orientation: MindMapOrientation,
+) => {
+  const branch = getProductNodeBranch(nodeData);
+
+  if (orientation === "Horizontal") {
+    return branch === "Left" ? { x: 1, y: 0.5 } : { x: 0, y: 0.5 };
+  }
+
+  return branch === "Left" ? { x: 0.5, y: 1 } : { x: 0.5, y: 0 };
+};
 
 const nodeThemes: Record<NodeCategory, NodeTheme> = {
   Executive: {
@@ -407,7 +388,7 @@ export default function DiagramPage() {
     const sharedLayoutOptions = {
       horizontalSpacing: 44,
       verticalSpacing: 64,
-      enableAnimation: true,
+      enableAnimation: false,
       margin: { left: 45, right: 45, top: 45, bottom: 45 },
     };
     if (layoutType === "OrganizationalChart")
@@ -442,19 +423,7 @@ export default function DiagramPage() {
           return "Right";
         }
 
-        let currentProductNode: ProductNode | undefined = nodeData;
-
-        while (
-          currentProductNode?.parentId &&
-          currentProductNode.parentId !== "engineering"
-        ) {
-          const parentProductNodeId: string = currentProductNode.parentId;
-          currentProductNode = productHierarchy.find(
-            (productNode) => productNode.id === parentProductNodeId,
-          );
-        }
-
-        return currentProductNode?.branch === "Left" ? "Left" : "Right";
+        return getProductNodeBranch(nodeData);
       },
     };
   }, [layoutType, orientation, getOrganizationalLayoutInfo, mindMapOrientation]);
@@ -476,7 +445,7 @@ export default function DiagramPage() {
     diagram.layout = { ...diagramLayout };
     diagram.dataBind();
     diagram.doLayout();
-    setTimeout(fitDiagramToPage, 220);
+    window.requestAnimationFrame(fitDiagramToPage);
   }, [diagramLayout, fitDiagramToPage]);
 
   const setNodeDefaults = useCallback(
@@ -492,6 +461,10 @@ export default function DiagramPage() {
       const isExecutiveNode = nodeData.category === "Executive";
       const isDivisionNode = nodeData.category === "Division";
       const isCapabilityNode = nodeData.category === "Capability";
+      const toggleIconOffset =
+        layoutType === "MindMap"
+          ? getMindMapToggleOffset(nodeData, mindMapOrientation)
+          : { x: 0.5, y: 1 };
       diagramNode.width =
         layoutType === "MindMap"
           ? isRootNode
@@ -550,20 +523,20 @@ export default function DiagramPage() {
         strokeWidth: isRootNode ? 2 : 1.5,
       };
       diagramNode.collapseIcon = {
-        shape: "Minus",
+        shape: "Plus",
         width: 20,
         height: 20,
-        offset: { x: 0.5, y: 1 },
+        offset: toggleIconOffset,
         fill: "#17336F",
         borderColor: "#FFF",
         borderWidth: 2,
         iconColor: "#FFF",
       };
       diagramNode.expandIcon = {
-        shape: "Plus",
+        shape: "Minus",
         width: 20,
         height: 20,
-        offset: { x: 0.5, y: 1 },
+        offset: toggleIconOffset,
         fill: "#FFF",
         borderColor: "#17336F",
         borderWidth: 2,
@@ -571,8 +544,84 @@ export default function DiagramPage() {
       };
       return diagramNode;
     },
-    [layoutType],
+    [layoutType, mindMapOrientation],
   );
+  useEffect(() => {
+    const diagram = diagramRef.current;
+
+    if (!diagram?.nodes.length) {
+      return;
+    }
+
+    diagram.nodes.forEach((diagramNode) => {
+      const nodeData = diagramNode.data;
+
+      if (!isProductNodeData(nodeData)) {
+        return;
+      }
+
+      const isMindMap = layoutType === "MindMap";
+      const isRootNode = nodeData.id === "engineering";
+      const isExecutiveNode = nodeData.category === "Executive";
+      const isDivisionNode = nodeData.category === "Division";
+      const isCapabilityNode = nodeData.category === "Capability";
+      const toggleIconOffset = isMindMap
+        ? getMindMapToggleOffset(nodeData, mindMapOrientation)
+        : { x: 0.5, y: 1 };
+
+      diagramNode.width = isMindMap
+        ? isRootNode
+          ? 220
+          : 176
+        : isExecutiveNode
+          ? 232
+          : isDivisionNode
+            ? 210
+            : isCapabilityNode
+              ? 186
+              : 200;
+      diagramNode.height = isMindMap
+        ? isRootNode
+          ? 78
+          : 62
+        : isExecutiveNode
+          ? 88
+          : isDivisionNode
+            ? 82
+            : 76;
+
+      if (diagramNode.collapseIcon) {
+        diagramNode.collapseIcon.offset = toggleIconOffset;
+      }
+
+      if (diagramNode.expandIcon) {
+        diagramNode.expandIcon.offset = toggleIconOffset;
+      }
+    });
+    diagram.connectors.forEach((connector) => {
+      const previousConnectorProperties = {
+        type: connector.type,
+        cornerRadius: connector.cornerRadius,
+        style: connector.style,
+        sourceDecorator: connector.sourceDecorator,
+        targetDecorator: connector.targetDecorator,
+      };
+      const nextConnectorProperties =
+        getConnectorPropertiesForLayout(layoutType);
+
+      Object.assign(connector, nextConnectorProperties);
+      diagram.connectorPropertyChange(
+        connector as Connector,
+        previousConnectorProperties as Connector,
+        nextConnectorProperties as Connector,
+      );
+    });
+    reapplyDiagramLayout();
+  }, [
+    layoutType,
+    reapplyDiagramLayout,
+    setNodeDefaults,
+  ]);
   const setConnectorDefaults = useCallback(
     (connector: ConnectorModel) => {
       Object.assign(connector, getConnectorPropertiesForLayout(layoutType));
@@ -705,34 +754,6 @@ export default function DiagramPage() {
     }
 
     setLayoutType(nextLayout);
-    window.requestAnimationFrame(() => {
-      const diagram = diagramRef.current;
-
-      if (!diagram) {
-        return;
-      }
-
-      diagram.connectors.forEach((connector) => {
-        const previousConnectorProperties = {
-          type: connector.type,
-          cornerRadius: connector.cornerRadius,
-          style: connector.style,
-          sourceDecorator: connector.sourceDecorator,
-          targetDecorator: connector.targetDecorator,
-        };
-        const nextConnectorProperties =
-          getConnectorPropertiesForLayout(nextLayout);
-
-        Object.assign(connector, nextConnectorProperties);
-        diagram.connectorPropertyChange(
-          connector as Connector,
-          previousConnectorProperties as Connector,
-          nextConnectorProperties as Connector,
-        );
-      });
-
-      fitDiagramToPage();
-    });
   };
 
   const renderLayoutTabs = () => (
@@ -1015,7 +1036,10 @@ export default function DiagramPage() {
                       {renderPropertyDropdown(
                         orientationOptions,
                         orientation,
-                        setOrientation,
+                        (value) => {
+                          setOrientation(value);
+                          window.requestAnimationFrame(fitDiagramToPage);
+                        },
                       )}
                     </div>
                     <ButtonComponent
@@ -1034,10 +1058,7 @@ export default function DiagramPage() {
                       {renderPropertyDropdown(
                         mindMapOptions,
                         mindMapOrientation,
-                        (value) => {
-                          setMindMapOrientation(value);
-                          window.requestAnimationFrame(fitDiagramToPage);
-                        },
+                        setMindMapOrientation,
                       )}
                     </div>
                     <ButtonComponent
