@@ -73,6 +73,42 @@ h1, h2 { margin: 0; }
 .brand.large .brand-mark { width: 40px; height: 40px; font-size: 20px; background: #fff; color: var(--primary); }
 .brand.large .brand-name { font-size: 22px; color: #fff; }
 
+
+/*-------------Grid---------*/
+
+.grid-page {
+  gap: 8px;
+}
+
+.grid-page .crumbs {
+  margin-bottom: 4px;
+}
+
+.grid-page .page-title-row {
+  gap: 10px;
+}
+
+.grid-page .page-icon {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+}
+
+.grid-page .page-title-row h1 {
+  font-size: 20px;
+}
+
+.grid-page .page-title-row p {
+  margin-top: 0;
+  font-size: 13px;
+}
+
+.grid-page .stats-bar {
+  gap: 6px 16px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
 /* ---------- Shell ---------- */
 .app-shell {
   display: grid; height: 100%;
