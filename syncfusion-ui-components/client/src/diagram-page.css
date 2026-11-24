@@ -1,0 +1,377 @@
+/* Diagram showcase integration for the existing sample-browser page/card. */
+.diagram-showcase-card {
+  position: relative;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.diagram-showcase-card .diagram-page {
+  min-height: 620px;
+}
+
+.diagram-showcase-card .diagram-page {
+  display: flex;
+  width: 100%;
+  height: min(780px, calc(100vh - 190px));
+  flex-direction: column;
+  overflow: hidden;
+  background: #f4f6fa;
+}
+
+.diagram-showcase-card #diagram-toolbar.e-toolbar {
+  min-height: 54px;
+  flex: 0 0 54px;
+  padding: 7px 8px;
+  border-radius: 10px 10px 0 0;
+  background: #fff;
+}
+.diagram-showcase-card #diagram-toolbar .e-toolbar-items,
+.diagram-showcase-card #diagram-toolbar .e-toolbar-item {
+  min-height: 38px;
+}
+.diagram-showcase-card #diagram-toolbar .e-toolbar-items {
+  background: transparent;
+}
+.diagram-showcase-card #diagram-toolbar .e-toolbar-item.e-separator {
+  height: 27px;
+  margin: 5px 7px;
+  border-left-color: #e1e6ee;
+}
+.diagram-showcase-card #diagram-toolbar .e-template {
+  height: 100%;
+}
+.diagram-showcase-card .layout-tabs,
+.diagram-showcase-card .interaction-tools,
+.diagram-showcase-card .output-tools {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 3px;
+}
+.diagram-showcase-card .layout-tab.e-btn {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #667085;
+  background: transparent;
+  box-shadow: none;
+  font-size: 11px;
+  text-transform: none;
+}
+.diagram-showcase-card .layout-tab.e-btn.layout-tab-active {
+  border-color: #9fb4eb;
+  color: #294da8;
+  background: #eef3ff;
+}
+.diagram-showcase-card .command-separator {
+  width: 1px;
+  height: 24px;
+  margin: 0 4px;
+  background: #e1e6ee;
+}
+.diagram-showcase-card .diagram-icon-button.e-btn {
+  display: inline-grid;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #5b687c;
+  background: transparent;
+  box-shadow: none;
+}
+.diagram-showcase-card .diagram-icon-button.e-btn.command-active {
+  border-color: #9eb3e9;
+  color: #315bd0;
+  background: #eef3ff;
+}
+.diagram-showcase-card .diagram-command-button.e-btn,
+.diagram-showcase-card .diagram-command-button.e-dropdown-btn {
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid #d1d9e5;
+  border-radius: 7px;
+  color: #344054;
+  background: #fff;
+  box-shadow: none;
+  font-size: 11px;
+  text-transform: none;
+}
+.diagram-showcase-card .diagram-workspace {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  border-top: 0;
+  border-radius: 0 0 10px 10px;
+  background: #fff;
+}
+.diagram-showcase-card .diagram-canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: #fbfcff;
+  background-image:
+    linear-gradient(rgb(113 133 172 / 6%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(113 133 172 / 6%) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.diagram-showcase-card .property-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 15;
+  width: 286px;
+  overflow-y: auto;
+  border-left: 1px solid #dfe5ed;
+  background: #fff;
+  box-shadow: -8px 0 22px rgb(31 51 96 / 9%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(100%);
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+.diagram-showcase-card .property-panel-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+.diagram-showcase-card .property-edge-button.e-btn {
+  position: absolute;
+  top: 15px;
+  right: 8px;
+  z-index: 20;
+  display: grid;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #bdcae8;
+  border-radius: 50%;
+  color: #315bd0;
+  background: #fff;
+  box-shadow: 0 3px 10px rgb(31 51 96 / 13%);
+  transition: right 180ms ease;
+}
+.diagram-showcase-card .diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
+  right: 272px;
+}
+.diagram-showcase-card .property-edge-button.e-btn .e-btn-icon {
+  margin: 0;
+  font-size: 11px;
+}
+.diagram-showcase-card .property-header {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e7ebf1;
+}
+.diagram-showcase-card .property-header > .e-icons {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 7px;
+  color: #315bd0;
+  background: #eef3ff;
+}
+.diagram-showcase-card .property-header strong,
+.diagram-showcase-card .property-header small {
+  display: block;
+}
+.diagram-showcase-card .property-header strong {
+  font-size: 12px;
+}
+.diagram-showcase-card .property-header small {
+  margin-top: 2px;
+  color: #8a95a7;
+  font-size: 9px;
+}
+.diagram-showcase-card .property-content {
+  padding: 15px;
+}
+.diagram-showcase-card .property-block {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8ecf2;
+}
+.diagram-showcase-card .property-block + .property-block {
+  padding-top: 16px;
+}
+.diagram-showcase-card .property-block > h2 {
+  margin: 0 0 12px;
+  color: #667085;
+  font-size: 9px;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+.diagram-showcase-card .property-field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 13px;
+}
+.diagram-showcase-card .property-field label,
+.diagram-showcase-card .node-relation label {
+  color: #667085;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.diagram-showcase-card .property-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.diagram-showcase-card .property-action-row strong,
+.diagram-showcase-card .property-action-row span {
+  display: block;
+}
+.diagram-showcase-card .property-action-row strong {
+  font-size: 11px;
+}
+.diagram-showcase-card .property-action-row span {
+  margin-top: 2px;
+  color: #98a2b3;
+  font-size: 9px;
+}
+.diagram-showcase-card .overview-toggle.e-btn,
+.diagram-showcase-card .apply-layout-button.e-btn {
+  height: 32px;
+  border: 1px solid #d3dae5;
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: none;
+  font-size: 10px;
+  text-transform: none;
+}
+.diagram-showcase-card .overview-toggle.e-btn.overview-toggle-active,
+.diagram-showcase-card .apply-layout-button.e-btn {
+  border-color: #9eb2e7;
+  color: #294da8;
+  background: #eef3ff;
+}
+.diagram-showcase-card .apply-layout-button.e-btn {
+  width: 100%;
+  height: 35px;
+}
+.diagram-showcase-card .selected-node-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.diagram-showcase-card .selected-node-heading > span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 9px;
+  color: #315bd0;
+  background: #eef3ff;
+  font-weight: 700;
+}
+.diagram-showcase-card .selected-node-heading strong,
+.diagram-showcase-card .selected-node-heading small {
+  display: block;
+}
+.diagram-showcase-card .selected-node-heading strong {
+  font-size: 12px;
+}
+.diagram-showcase-card .selected-node-heading small {
+  color: #8a95a7;
+  font-size: 9px;
+}
+.diagram-showcase-card .node-details > p {
+  color: #667085;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.diagram-showcase-card .node-relation {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+}
+.diagram-showcase-card .node-relation > button,
+.diagram-showcase-card .child-list button {
+  display: flex;
+  width: 100%;
+  min-height: 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid #e0e5ed;
+  border-radius: 7px;
+  color: #344054;
+  background: #fff;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+.diagram-showcase-card .child-list {
+  display: grid;
+  gap: 6px;
+}
+.diagram-showcase-card .relation-empty {
+  color: #98a2b3;
+  font-size: 10px;
+}
+.diagram-showcase-card .overview-panel {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 5;
+  width: 244px;
+  overflow: hidden;
+  padding: 6px;
+  border: 1px solid #cfd7e5;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 10px 26px rgb(27 42 78 / 16%);
+}
+.diagram-showcase-card .overview-header {
+  display: grid;
+  min-height: 38px;
+  align-content: center;
+  padding: 2px 7px 6px;
+}
+.diagram-showcase-card .overview-header strong,
+.diagram-showcase-card .overview-header span {
+  display: block;
+}
+.diagram-showcase-card .overview-header strong {
+  font-size: 11px;
+}
+.diagram-showcase-card .overview-header span {
+  color: #8a95a7;
+  font-size: 9px;
+}
+.diagram-command-button.e-dropdown-popup .e-item {
+  min-height: 35px;
+  color: #344054;
+  font-size: 11px;
+}
+.diagram-property-dropdown.e-popup .e-list-item {
+  min-height: 35px;
+  color: #344054;
+  font-size: 11px;
+}
+@media (max-width: 1320px) {
+  .diagram-showcase-card .layout-tab.e-btn {
+    padding-inline: 8px;
+  }
+}
+
+/* Keep the property arrow attached to the overlay boundary. */
+.diagram-showcase-card .diagram-workspace:has(.property-panel-open) .property-edge-button.e-btn {
+  right: 270px;
+}
